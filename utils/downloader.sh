@@ -1,7 +1,7 @@
 #!/bin/bash
 
 URL_FILE="datasets_url.txt"
-DATASET_DIR="../dataset"
+DATASET_DIR="../dataset/raw"
 
 # Ensure the script gets the file as a parameter
 if [ -z "$URL_FILE" ]; then
