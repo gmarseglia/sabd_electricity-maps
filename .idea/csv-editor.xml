@@ -31,6 +31,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/dataset/raw/IT_2021_monthly.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/dataset/raw/IT_2021_yearly.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/dataset/raw/SE_2024_yearly.csv">
           <value>
             <Attribute>
