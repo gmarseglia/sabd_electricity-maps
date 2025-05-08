@@ -3,20 +3,6 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="/dataset/IT_2022_yearly.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/dataset/IT_2024_yearly.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="/dataset/combined/combined_hourly_dataset.csv">
           <value>
             <Attribute>
@@ -38,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/dataset/raw/IT_2021_hourly.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/dataset/raw/IT_2021_monthly.csv">
           <value>
             <Attribute>
@@ -46,6 +39,13 @@
           </value>
         </entry>
         <entry key="/dataset/raw/IT_2021_yearly.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/dataset/raw/SE_2021_hourly.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
