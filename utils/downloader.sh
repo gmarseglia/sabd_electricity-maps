@@ -21,8 +21,9 @@ while IFS= read -r line; do
   if [[ ! "$line" =~ ^# ]]; then
     # Check if the line is not empty
     if [[ -n "$line" ]]; then
+      # Check if the file exists already
       echo "Downloading: $line"
-      wget -P "$DATASET_DIR" "$line"
+      wget -nc -P "$DATASET_DIR" "$line"
     fi
   fi
 done < "$URL_FILE"

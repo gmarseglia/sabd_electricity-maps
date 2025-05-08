@@ -1,9 +1,9 @@
 from pyspark.sql import SparkSession
 from tabulate import tabulate
 
+HOURLY_FILE = "../dataset/combined/combined_hourly_dataset.csv"
 MONTHLY_FILE = "../dataset/combined/combined_monthly_dataset.csv"
 YEARLY_FILE = "../dataset/combined/combined_yearly_dataset.csv"
-
 
 def get_country(x):
     return x.split(",")[1]
@@ -29,8 +29,13 @@ if __name__ == "__main__":
 
     sc = spark.sparkContext
 
+    hourly_lines = sc.textFile(HOURLY_FILE)
     monthly_lines = sc.textFile(MONTHLY_FILE)
     yearly_lines = sc.textFile(YEARLY_FILE)
+
+    print(f"Hourly lines: {hourly_lines.count()}")
+
+    exit(0)
 
     # Query 2.2
     by_c02_intensity = monthly_lines \
