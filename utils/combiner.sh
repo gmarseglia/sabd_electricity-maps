@@ -20,7 +20,7 @@ MONTHLY_DATASET="$OUTPUT_DIR/combined_monthly_dataset.csv"
 YEARLY_DATASET="$OUTPUT_DIR/combined_yearly_dataset.csv"
 
 # Loop through files containing 'monthly' in their name
-echo "" > "$MONTHLY_DATASET"
+> "$MONTHLY_DATASET"
 for file in "$INPUT_DIR"/*monthly*; do
     # Check if the file exists and is a regular file
     if [ -f "$file" ]; then
@@ -31,7 +31,7 @@ done
 echo "Combined content saved in $MONTHLY_DATASET"
 
 # Loop through files containing 'yearly' in their name
-echo "" > "$YEARLY_DATASET"
+> "$YEARLY_DATASET"
 for file in "$INPUT_DIR"/*yearly*; do
     # Check if the file exists and is a regular file
     if [ -f "$file" ]; then

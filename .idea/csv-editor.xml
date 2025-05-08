@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/dataset/combined/combined_yearly_dataset.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/dataset/raw/SE_2024_yearly.csv">
           <value>
             <Attribute>
