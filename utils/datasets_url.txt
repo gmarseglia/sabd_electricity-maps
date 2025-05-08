@@ -1,0 +1,17 @@
+# Italy
+https://data.electricitymaps.com/2025-04-03/IT_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2024_daily.csv
+https://data.electricitymaps.com/2025-04-03/IT_2024_monthly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2024_yearly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2023_daily.csv
+https://data.electricitymaps.com/2025-04-03/IT_2023_monthly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2023_yearly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2022_daily.csv
+https://data.electricitymaps.com/2025-04-03/IT_2022_monthly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2022_yearly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2021_daily.csv
+https://data.electricitymaps.com/2025-04-03/IT_2021_monthly.csv
+https://data.electricitymaps.com/2025-04-03/IT_2021_yearly.csv
