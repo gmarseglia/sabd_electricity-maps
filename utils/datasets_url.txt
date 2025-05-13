@@ -1,35 +1,40 @@
-## Italy
-https://data.electricitymaps.com/2025-04-03/IT_2024_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2024_daily.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2024_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2024_yearly.csv
-https://data.electricitymaps.com/2025-04-03/IT_2023_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2023_daily.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2023_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2023_yearly.csv
-https://data.electricitymaps.com/2025-04-03/IT_2022_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2022_daily.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2022_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2022_yearly.csv
-https://data.electricitymaps.com/2025-04-03/IT_2021_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2021_daily.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2021_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/IT_2021_yearly.csv
-
-## Sweden
-https://data.electricitymaps.com/2025-04-03/SE_2024_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2024_daily.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2024_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2024_yearly.csv
-https://data.electricitymaps.com/2025-04-03/SE_2023_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2023_daily.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2023_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2023_yearly.csv
-https://data.electricitymaps.com/2025-04-03/SE_2022_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2022_daily.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2022_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2022_yearly.csv
-https://data.electricitymaps.com/2025-04-03/SE_2021_hourly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2021_daily.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2021_monthly.csv
-# https://data.electricitymaps.com/2025-04-03/SE_2021_yearly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CNO_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CSO_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-NO_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SAR_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SIC_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SO_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE1_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE2_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE3_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE4_2021_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CNO_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CSO_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-NO_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SAR_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SIC_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SO_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE1_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE2_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE3_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE4_2022_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CNO_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CSO_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-NO_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SAR_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SIC_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SO_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE1_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE2_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE3_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE4_2023_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CNO_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-CSO_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-NO_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SAR_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SIC_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/IT-SO_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE1_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE2_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE3_2024_hourly.csv
+https://data.electricitymaps.com/2025-04-03/SE-SE4_2024_hourly.csv
