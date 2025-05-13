@@ -1,3 +1,11 @@
+COLUMN_NAMES = [
+    'Datetime', 'Country', 'Zone_name', 'Zone_id',
+    'CO2_intensity_direct', 'CO2_intensity_lifecycle',
+    'Carbon_free_energy_percent', 'Renewable_energy_percent',
+    'Data_source', 'Data_estimated', 'Data_estimation_method'
+]
+
+
 def get_country(x):
     return x.split(",")[1]
 
