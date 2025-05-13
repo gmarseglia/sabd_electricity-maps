@@ -1,10 +1,15 @@
-x = "2024-01-01 00:00:00,Italy,Italy,IT,210.41,273.86,56.59,48.48,,,"
+# Query 2.2
+from source.formatter import *
 
-year = x.split(",")[0].split("-")[0]
-month = x.split(",")[0].split("-")[1]
-country = x.split(",")[1]
-carbon_intensity = x.split(',')[4]
-carbon_free = x.split(',')[6]
 
-print(f"Year: {year}, Month: {month}, Country: {country}, C02 intensity: {carbon_intensity}, C02 free: {carbon_free}")
+def query2(sc, italy_file):
+    # by_c02_intensity = hourly_lines \
+    #     .filter(lambda x: get_country(x) == "Italy") \
+    #     .map(lambda x: (get_year(x), get_month(x), x)) \
+    #     .map(lambda x: (get_co2_intensity(x[2]), x[0], x[1], x[2])) \
+    #     .cache()
+    #
+    # best_5 = by_c02_intensity.takeOrdered(5, lambda x: x[0])
+    # worst_5 = by_c02_intensity.takeOrdered(5, lambda x: -x[0])
 
+    return
