@@ -17,6 +17,8 @@ if __name__ == "__main__":
 
     query2(spark, ITALY_HOURLY_FILE)
 
+    spark.stop()
+
     # result1 = query1(sc, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE).collect()
     #
     # print(tabulate(result1,

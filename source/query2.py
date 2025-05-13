@@ -1,14 +1,40 @@
 # Query 2.2
+from audioop import avgpp
+
 from pyspark.sql.connect.session import SparkSession
-from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.functions import col, split, avg, desc
+from tabulate import tabulate
 
 from source.formatter import *
 
-
 def query2(spark: SparkSession, italy_file: str):
-    df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(*COLUMN_NAMES)
+    df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(*COLUMN_NAMES_RAW)
 
-    df.show()
+    df.show(5)
+
+    df = df.withColumn('Year', split(col("Datetime"), "-").getItem(0)) \
+        .withColumn('Month', split(col("Datetime"), "-").getItem(1)) \
+        .cache()
+
+    df = df.select(*COLUMN_NAMES_DF)
+    df.show(5)
+
+    df_avg = df.groupBy('Year', 'Month').agg(
+        avg('CO2_intensity_direct').alias('avg_CO2_intensity_direct'),
+        avg('Carbon_free_energy_percent').alias('avg_carbon_free_energy'),
+    )
+
+    # df_avg.show()
+
+    df_sorted_by_direct = df_avg.sort(desc('avg_CO2_intensity_direct'))
+    highest_5_by_direct = df_sorted_by_direct.head(5)
+    lowest_5_by_direct = df_sorted_by_direct.tail(5)
+
+    df_sorted_by_free = df_avg.sort(desc('avg_carbon_free_energy'))
+    highest_5_by_free = df_sorted_by_free.head(5)
+    lowest_5_by_free = df_sorted_by_free.tail(5)
+
+    print(tabulate(highest_5_by_direct, headers=df_avg.columns, tablefmt='psql'))
 
     return
 

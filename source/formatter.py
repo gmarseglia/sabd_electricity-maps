@@ -1,8 +1,14 @@
-COLUMN_NAMES = [
+COLUMN_NAMES_RAW = [
     'Datetime', 'Country', 'Zone_name', 'Zone_id',
     'CO2_intensity_direct', 'CO2_intensity_lifecycle',
     'Carbon_free_energy_percent', 'Renewable_energy_percent',
     'Data_source', 'Data_estimated', 'Data_estimation_method'
+]
+
+COLUMN_NAMES_DF = [
+    'Year', 'Month', 'Country', 'Zone_id',
+    'CO2_intensity_direct',
+    'Carbon_free_energy_percent'
 ]
 
 
