@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from tabulate import tabulate
 
+from source.formatter import QUERY_1_COLUMNS
 from source.query1 import query1
 from source.query2 import query2
 
@@ -15,14 +16,18 @@ if __name__ == "__main__":
 
     sc = spark.sparkContext
 
-    query2(spark, ITALY_HOURLY_FILE)
+    # query2(spark, ITALY_HOURLY_FILE)
+
+    result1 = query1(sc, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE)
+
+    result1.toDF(QUERY_1_COLUMNS) \
+        .coalesce(1) \
+        .write \
+        .mode('overwrite') \
+        .csv('../results/query_1.csv', header=True)
+
+    print(tabulate(result1.collect(),
+                   headers=QUERY_1_COLUMNS,
+                   tablefmt="psql"))
 
     spark.stop()
-
-    # result1 = query1(sc, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE).collect()
-    #
-    # print(tabulate(result1,
-    #                headers=["Country, Year",
-    #                         "Avg CO2 Intensity", "Min CO2 Intensity", "Max CO2 Intensity",
-    #                         "Avg C02 Free", "Min C02 Free", "Max C02 Free"],
-    #                tablefmt="psql"))

@@ -7,6 +7,7 @@ from tabulate import tabulate
 
 from source.formatter import *
 
+
 def query2(spark: SparkSession, italy_file: str):
     df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(*COLUMN_NAMES_RAW)
 
@@ -24,17 +25,16 @@ def query2(spark: SparkSession, italy_file: str):
         avg('Carbon_free_energy_percent').alias('avg_carbon_free_energy'),
     )
 
-    # df_avg.show()
-
     df_sorted_by_direct = df_avg.sort(desc('avg_CO2_intensity_direct'))
-    highest_5_by_direct = df_sorted_by_direct.head(5)
-    lowest_5_by_direct = df_sorted_by_direct.tail(5)
-
     df_sorted_by_free = df_avg.sort(desc('avg_carbon_free_energy'))
-    highest_5_by_free = df_sorted_by_free.head(5)
-    lowest_5_by_free = df_sorted_by_free.tail(5)
 
-    print(tabulate(highest_5_by_direct, headers=df_avg.columns, tablefmt='psql'))
+    df_sorted_by_direct.coalesce(1) \
+        .write.csv('../results/query_2-by_direct.csv', header=True)
+
+    df_sorted_by_free.coalesce(1) \
+        .write.csv('../results/query_2-by_free.csv', header=True)
+
+    print(tabulate(df_sorted_by_direct.head(5), headers=df_avg.columns, tablefmt='psql'))
 
     return
 

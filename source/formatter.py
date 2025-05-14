@@ -1,3 +1,9 @@
+QUERY_1_COLUMNS = [
+    "Country", "Year",
+    "Avg CO2 Intensity", "Min CO2 Intensity", "Max CO2 Intensity",
+    "Avg C02 Free", "Min C02 Free", "Max C02 Free"
+]
+
 COLUMN_NAMES_RAW = [
     'Datetime', 'Country', 'Zone_name', 'Zone_id',
     'CO2_intensity_direct', 'CO2_intensity_lifecycle',

@@ -1,7 +1,9 @@
+from pyspark.sql import DataFrame
+
 from formatter import *
 
 
-def query1(sc, italy_file, sweden_file):
+def query1(sc, italy_file, sweden_file) -> DataFrame:
     italy_rdd = sc.textFile(italy_file)
     sweden_rdd = sc.textFile(sweden_file)
 
@@ -28,10 +30,9 @@ def query1(sc, italy_file, sweden_file):
     query_1 = avg_by_country \
         .join(min_by_country) \
         .join(max_by_country) \
-        .coalesce(1) \
         .map(lambda x:
-             (x[0], x[1][0][0][0], x[1][0][1][0], x[1][1][0], x[1][0][0][1], x[1][0][1][1], x[1][1][1])
+             (x[0][0], x[0][1], x[1][0][0][0], x[1][0][1][0], x[1][1][0], x[1][0][0][1], x[1][0][1][1], x[1][1][1])
              ) \
-        .sortBy(lambda x: x[0], True)
+        .sortBy(lambda x: x[0] + x[1], True)
 
     return query_1
