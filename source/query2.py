@@ -1,11 +1,9 @@
 # Query 2.2
-from audioop import avgpp
-
 from pyspark.sql.connect.session import SparkSession
 from pyspark.sql.functions import col, split, avg, desc
 from tabulate import tabulate
 
-from source.formatter import *
+from custom_formatter import *
 
 
 def query2(spark: SparkSession, italy_file: str):
@@ -34,7 +32,7 @@ def query2(spark: SparkSession, italy_file: str):
     df_sorted_by_free.coalesce(1) \
         .write.csv('../results/query_2-by_free.csv', header=True)
 
-    print(tabulate(df_sorted_by_direct.head(5), headers=df_avg.columns, tablefmt='psql'))
+    # print(tabulate(df_sorted_by_direct.head(5), headers=df_avg.columns, tablefmt='psql'))
 
     return
 

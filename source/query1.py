@@ -1,6 +1,6 @@
 from pyspark.sql import DataFrame
 
-from formatter import *
+from custom_formatter import *
 
 
 def query1(sc, italy_file, sweden_file) -> DataFrame:
