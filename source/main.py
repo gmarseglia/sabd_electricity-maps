@@ -19,11 +19,10 @@ if __name__ == "__main__":
 
     sc = spark.sparkContext
 
-    # query2(spark, ITALY_HOURLY_FILE)
+    sc.setLogLevel("WARN")
 
-    result1 = query1(sc, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE)
-    
-    # result1.collect()
+    result1 = query1(sc, italy_file=ITALY_HOURLY_FILE,
+                     sweden_file=SWEDEN_HOURLY_FILE)
 
     result1.toDF(QUERY_1_COLUMNS) \
         .coalesce(1) \
@@ -31,8 +30,11 @@ if __name__ == "__main__":
         .mode('overwrite') \
         .csv(f'{HDFS_PREFIX}/results/query_1', header=True)
 
-    # print(tabulate(result1.collect(),
-    #                headers=QUERY_1_COLUMNS,
-    #                tablefmt="psql"))
+    result21, result22 = query2(spark, ITALY_HOURLY_FILE)
 
-    # spark.stop()
+    result21.write.mode('overwrite').csv(
+        f'{HDFS_PREFIX}/results/query_2-by_direct', header=True)
+    result22.write.mode('overwrite').csv(
+        f'{HDFS_PREFIX}/results/query_2-by_free', header=True)
+
+    spark.stop()

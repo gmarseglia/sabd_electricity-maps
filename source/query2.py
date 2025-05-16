@@ -9,14 +9,14 @@ from custom_formatter import *
 def query2(spark: SparkSession, italy_file: str):
     df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(*COLUMN_NAMES_RAW)
 
-    df.show(5)
+    # df.show(5)
 
     df = df.withColumn('Year', split(col("Datetime"), "-").getItem(0)) \
         .withColumn('Month', split(col("Datetime"), "-").getItem(1)) \
         .cache()
 
     df = df.select(*COLUMN_NAMES_DF)
-    df.show(5)
+    # df.show(5)
 
     df_avg = df.groupBy('Year', 'Month').agg(
         avg('CO2_intensity_direct').alias('avg_CO2_intensity_direct'),
@@ -26,15 +26,13 @@ def query2(spark: SparkSession, italy_file: str):
     df_sorted_by_direct = df_avg.sort(desc('avg_CO2_intensity_direct'))
     df_sorted_by_free = df_avg.sort(desc('avg_carbon_free_energy'))
 
-    df_sorted_by_direct.coalesce(1) \
-        .write.csv('../results/query_2-by_direct.csv', header=True)
+    df_sorted_by_direct = df_sorted_by_direct.coalesce(1)
+        
+    df_sorted_by_free = df_sorted_by_free.coalesce(1)
+    
+    print(df_sorted_by_direct.show(5))
 
-    df_sorted_by_free.coalesce(1) \
-        .write.csv('../results/query_2-by_free.csv', header=True)
-
-    # print(tabulate(df_sorted_by_direct.head(5), headers=df_avg.columns, tablefmt='psql'))
-
-    return
+    return df_sorted_by_direct, df_sorted_by_free
 
     # italy_rdd = sc.textFile(italy_file)
     #
@@ -50,7 +48,7 @@ def query2(spark: SparkSession, italy_file: str):
     # print(avg.take(10))
     #
     # best_5_co2_intensity = avg.takeOrdered(5, lambda x : x[1][0])
-
+    # 
     # by_c02_intensity = hourly_lines \
     #     .filter(lambda x: get_country(x) == "Italy") \
     #     .map(lambda x: (get_year(x), get_month(x), x)) \
@@ -59,5 +57,5 @@ def query2(spark: SparkSession, italy_file: str):
     #
     # best_5 = by_c02_intensity.takeOrdered(5, lambda x: x[0])
     # worst_5 = by_c02_intensity.takeOrdered(5, lambda x: -x[0])
-
-    return
+    # 
+    # return

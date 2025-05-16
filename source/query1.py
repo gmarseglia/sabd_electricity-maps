@@ -31,8 +31,13 @@ def query1(sc, italy_file, sweden_file) -> DataFrame:
         .join(min_by_country) \
         .join(max_by_country) \
         .map(lambda x:
-             (x[0][0], x[0][1], x[1][0][0][0], x[1][0][1][0], x[1][1][0], x[1][0][0][1], x[1][0][1][1], x[1][1][1])
+             (x[0][0], x[0][1], x[1][0][0][0], x[1][0][1][0], x[1]
+              [1][0], x[1][0][0][1], x[1][0][1][1], x[1][1][1])
              ) \
         .sortBy(lambda x: x[0] + x[1], True)
+
+    # print(tabulate(query_1.collect(),
+    #                headers=QUERY_1_COLUMNS,
+    #                tablefmt="psql"))
 
     return query_1
