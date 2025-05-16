@@ -23,13 +23,13 @@ if __name__ == "__main__":
 
     result1 = query1(sc, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE)
     
-    result1.collect()
+    # result1.collect()
 
-    # result1.toDF(QUERY_1_COLUMNS) \
-    #     .coalesce(1) \
-    #     .write \
-    #     .mode('overwrite') \
-    #     .csv(f'{HDFS_PREFIX}/results/query_1', header=True)
+    result1.toDF(QUERY_1_COLUMNS) \
+        .coalesce(1) \
+        .write \
+        .mode('overwrite') \
+        .csv(f'{HDFS_PREFIX}/results/query_1', header=True)
 
     # print(tabulate(result1.collect(),
     #                headers=QUERY_1_COLUMNS,

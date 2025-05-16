@@ -6,7 +6,7 @@ services:
         networks:
             - sabd-net
         container_name: master
-        image: matnar/hadoop
+        image: gm/hadoop
         depends_on:
             - slave1
             - slave2
@@ -22,7 +22,7 @@ services:
         networks:
             - sabd-net
         container_name: slave1
-        image: matnar/hadoop
+        image: gm/hadoop
         tty: true
         stdin_open: true
         
@@ -32,7 +32,7 @@ services:
         networks:
             - sabd-net
         container_name: slave2
-        image: matnar/hadoop
+        image: gm/hadoop
         tty: true
         stdin_open: true
 
@@ -42,7 +42,7 @@ services:
         networks:
             - sabd-net
         container_name: slave3
-        image: matnar/hadoop
+        image: gm/hadoop
         tty: true
         stdin_open: true
 
