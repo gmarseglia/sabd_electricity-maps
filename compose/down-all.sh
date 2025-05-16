@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# Stop Spark
 ./down-spark.sh
-docker-compose -f hdfs/docker-compose.yml down -t 2
+
+# Stop HDFS 
+./down-hdfs.sh
+
+# Remove the docker network
 docker network rm sabd-net

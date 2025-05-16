@@ -13,6 +13,8 @@ services:
             - slave3
         tty: true
         stdin_open: true
+        volumes:
+          - "${DATA_DIR}:/app/dataset"
 
     slave1:
         ports:
