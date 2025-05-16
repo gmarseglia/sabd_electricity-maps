@@ -1,7 +1,7 @@
 services:
     master:
         ports:
-            - 9000:9000
+            - 54310:54310
             - 9870:9870
         networks:
             - sabd-net
