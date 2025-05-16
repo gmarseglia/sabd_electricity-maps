@@ -2,11 +2,8 @@ services:
   spark-master:
     image: apache/spark:latest
     container_name: spark-master
-    volumes:
-      - ./spark-volume/:/opt/spark/work-dir/data/
     command: ["/bin/bash", "-c", "/opt/spark/sbin/start-master.sh && tail -f /dev/null"]
     ports:
-      - "4040:4040"   # Spark Web UI
       - "8080:8080"   # Spark Master Web UI
       - "7077:7077"   # Spark Master port
     networks:
@@ -17,8 +14,6 @@ services:
     container_name: spark-worker-1
     depends_on:
       - spark-master
-    volumes:
-      - ./spark-volume/:/opt/spark/work-dir/data/
     command: ["/bin/bash", "-c", "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 && tail -f /dev/null"]
     ports:
       - "8081:8081"   # Spark Worker UI
@@ -30,13 +25,24 @@ services:
     container_name: spark-worker-2
     depends_on:
       - spark-master
-    volumes:
-      - ./spark-volume/:/opt/spark/work-dir/data/
     command: ["/bin/bash", "-c", "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 && tail -f /dev/null"]
     ports:
       - "8082:8081"   # Spark Worker UI (mapped to avoid conflict)
     networks:
       - sabd-net
+
+  spark-client:
+    image: apache/spark:latest
+    container_name: spark-client
+    volumes:
+      - "${SOURCE_DIR}:/opt/spark/work-dir/source/"
+    command: ["/bin/bash", "-c", "tail -f /dev/null"]
+    ports:
+      - "4040:4040"   # Spark Web UI
+    networks:
+      - sabd-net
+    depends_on:
+      - spark-master
 
 networks:
     sabd-net:

@@ -1,8 +1,8 @@
 services:
     master:
         ports:
-            - 54310:54310
-            - 9870:9870
+            # - 54310:54310   # HDFS Remote DFS port
+            - 9870:9870     # Web UI
         networks:
             - sabd-net
         container_name: master
