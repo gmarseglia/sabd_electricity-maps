@@ -21,20 +21,25 @@ if __name__ == "__main__":
 
     sc.setLogLevel("WARN")
 
-    result1 = query1(sc, italy_file=ITALY_HOURLY_FILE,
-                     sweden_file=SWEDEN_HOURLY_FILE)
+    # result1 = query1(sc, italy_file=ITALY_HOURLY_FILE,
+    #                  sweden_file=SWEDEN_HOURLY_FILE)
+    
+    # print(tabulate(result1.collect(), headers=QUERY_1_COLUMNS))
 
-    result1.toDF(QUERY_1_COLUMNS) \
-        .coalesce(1) \
-        .write \
-        .mode('overwrite') \
-        .csv(f'{HDFS_PREFIX}/results/query_1', header=True)
+    # result1.toDF(QUERY_1_COLUMNS) \
+    #     .coalesce(1) \
+    #     .write \
+    #     .mode('overwrite') \
+    #     .csv(f'{HDFS_PREFIX}/results/query_1', header=True)
 
     result21, result22 = query2(spark, ITALY_HOURLY_FILE)
+    
+    # print(tabulate(result21.collect(), headers=QUERY_1_COLUMNS))
+    # print(tabulate(result22.collect(), headers=QUERY_1_COLUMNS))
 
     result21.write.mode('overwrite').csv(
-        f'{HDFS_PREFIX}/results/query_2-by_direct', header=True)
+        f'{HDFS_PREFIX}/results/query_2-by_direct-no_coalesce', header=True)
     result22.write.mode('overwrite').csv(
-        f'{HDFS_PREFIX}/results/query_2-by_free', header=True)
+        f'{HDFS_PREFIX}/results/query_2-by_free-no_coalesce', header=True)
 
     spark.stop()

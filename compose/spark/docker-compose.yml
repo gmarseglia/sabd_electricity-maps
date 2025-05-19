@@ -8,6 +8,11 @@ services:
       - "7077:7077"   # Spark Master port
     networks:
       - sabd-net
+    # environment:
+    #   - SPARK_EVENT_LOG_ENABLED=true
+    #   - SPARK_EVENT_LOG_DIR=file:///tmp/spark-events
+    # volumes:
+    #   - ./spark-events:/tmp/spark-events
 
   spark-worker-1:
     image: gm/spark:latest
@@ -19,6 +24,11 @@ services:
       - "8081:8081"   # Spark Worker UI
     networks:
       - sabd-net
+    # environment:
+    #   - SPARK_EVENT_LOG_ENABLED=true
+    #   - SPARK_EVENT_LOG_DIR=file:///tmp/spark-events
+    # volumes:
+    #   - ./spark-events:/tmp/spark-events
 
   spark-worker-2:
     image: gm/spark:latest
@@ -30,12 +40,19 @@ services:
       - "8082:8081"   # Spark Worker UI (mapped to avoid conflict)
     networks:
       - sabd-net
+    # environment:
+    #   - SPARK_EVENT_LOG_ENABLED=true
+    #   - SPARK_EVENT_LOG_DIR=file:///tmp/spark-events
+    # volumes:
+    #   - ./spark-events:/tmp/spark-events
 
   spark-client:
     image: gm/spark:latest
     container_name: spark-client
     volumes:
       - "${SOURCE_DIR}:/opt/spark/work-dir/source/"
+      # - ./spark-events:/tmp/spark-events
+      - spark-events:/tmp/spark-events
     command: ["/bin/bash", "-c", "tail -f /dev/null"]
     ports:
       - "4040:4040"   # Spark Web UI
@@ -43,9 +60,31 @@ services:
       - sabd-net
     depends_on:
       - spark-master
+    # environment:
+    #   - SPARK_EVENT_LOG_ENABLED=true
+    #   - SPARK_EVENT_LOG_DIR=file:///tmp/spark-events
+      
+
+  spark-history-server:
+    image: gm/spark:latest
+    container_name: spark-history-server
+    hostname: spark-history-server
+    depends_on:
+      - spark-master
+    command: ["/bin/bash", "-c", "/opt/spark/sbin/start-history-server.sh && tail -f /dev/null"]
+    environment:
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=file:///tmp/spark-events
+    ports:
+      - "18080:18080"  # History Server UI
+    volumes:
+      # - ./spark-events:/tmp/spark-events 
+      - spark-events:/tmp/spark-events
 
 networks:
     sabd-net:
         name: sabd-net
         driver: bridge
         external: true
+
+volumes:
+  spark-events:
