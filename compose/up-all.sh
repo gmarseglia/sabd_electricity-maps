@@ -6,5 +6,8 @@ docker network create --driver bridge sabd-net
 # Start HDFS
 ./up-hdfs.sh
 
+# Start InfluxDB
+./up-influxdb.sh
+
 # Start Spark
 ./up-spark.sh

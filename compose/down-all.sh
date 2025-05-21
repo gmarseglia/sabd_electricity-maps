@@ -3,6 +3,9 @@
 # Stop Spark
 ./down-spark.sh
 
+# Stop InfluxDB
+./down-influxdb.sh
+
 # Stop HDFS 
 ./down-hdfs.sh
 
