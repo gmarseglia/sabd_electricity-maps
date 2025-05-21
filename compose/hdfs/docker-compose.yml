@@ -10,7 +10,7 @@ services:
         depends_on:
             - slave1
             - slave2
-            - slave3
+            # - slave3
         tty: true
         stdin_open: true
         volumes:
@@ -36,15 +36,15 @@ services:
         tty: true
         stdin_open: true
 
-    slave3:
-        ports:
-            - 9862:9864
-        networks:
-            - sabd-net
-        container_name: slave3
-        image: gm/hadoop
-        tty: true
-        stdin_open: true
+    # slave3:
+    #     ports:
+    #         - 9862:9864
+    #     networks:
+    #         - sabd-net
+    #     container_name: slave3
+    #     image: gm/hadoop
+    #     tty: true
+    #     stdin_open: true
 
 networks:
     sabd-net:
