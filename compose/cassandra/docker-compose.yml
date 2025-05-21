@@ -1,0 +1,16 @@
+services:
+  cassandra:
+    image: cassandra
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=SABD-Cluster
+    networks:
+      - sabd-net
+
+networks:
+    sabd-net:
+        name: sabd-net
+        driver: bridge
+        external: true

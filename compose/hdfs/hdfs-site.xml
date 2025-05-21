@@ -3,8 +3,12 @@
         <name>dfs.replication</name>
         <value>2</value>
     </property>
-    <property>
+    <!-- <property>
         <name>dfs.datanode.hostname</name>
         <value>localhost</value>
-    </property>
+    </property> -->
+    <!-- <property>
+        <name>dfs.client.use.datanode.hostname</name>
+        <value>true</value>
+    </property> -->
 </configuration>
