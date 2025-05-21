@@ -8,7 +8,7 @@ SOURCE_DIR="/home/giuseppe/SABD/sabd_electricity-maps/source"
 docker exec -t spark-client /opt/spark/bin/spark-submit \
     --master spark://spark-master:7077 \
     --py-files source/source.zip \
-    source/main.py --mode hdfs --q1 True --collect True
+    source/main.py --mode hdfs --q1 True --save True
 
 # Remove the source code
 (cd ${SOURCE_DIR} && rm -f source.zip)
