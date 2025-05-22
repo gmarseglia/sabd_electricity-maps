@@ -1,4 +1,9 @@
 #!/bin/bash
-docker run -d --rm --name grafana -p 3000:3000 --network=sabd-net bitnami/grafana:latest
-# docker run -d --name=grafana -p 3000:3000 --network=sabd-net grafana/grafana
-# curl -i -L -X GET "http://master:9870/webhdfs/v1/results/query_2-by_free-no_coalesce/part-00000-97b886e7-7c2a-424f-958f-11a1b6ddd25b-c000.csv?op=OPEN"
+docker run -d --rm --name grafana -p 3000:3000 -v grafana_data:/opt/bitnami/grafana --network=sabd-net bitnami/grafana:latest
+
+# from(bucket: "mybucket")
+#   |> range(start: 2021-01-01T00:00:00Z, stop: 2025-01-01T00:00:00Z)  // example fixed range: one day
+#   |> filter(fn: (r) => r["_measurement"] == "query_2")
+#   |> filter(fn: (r) => r["_field"] == "avg_c02_free" or r["_field"] == "co2_intensity")
+#   |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+#   |> yield(name: "mean")
