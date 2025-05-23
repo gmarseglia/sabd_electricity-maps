@@ -3,8 +3,12 @@
         <name>dfs.replication</name>
         <value>2</value>
     </property>
-    <property>
+    <!-- <property>
         <name>dfs.datanode.hostname</name>
         <value>localhost</value>
+    </property> -->
+    <property>
+        <name>dfs.namenode.http-address</name>
+        <value>master:9870</value>
     </property>
 </configuration>
