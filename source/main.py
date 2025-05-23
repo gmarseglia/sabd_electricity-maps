@@ -15,12 +15,14 @@ if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--mode", type=str, default="local")
+    arg_parser.add_argument("--api", type=str, default="default")
     arg_parser.add_argument("--q1", action="store_true")
     arg_parser.add_argument("--q2", action="store_true")
     arg_parser.add_argument("--collect", action="store_true")
     arg_parser.add_argument("--save-hdfs", dest="save_hdfs", action="store_true")
     arg_parser.add_argument("--save-influx", dest="save_influx", action="store_true")
-    arg_parser.add_argument("--timed", dest="timed", action="store_true")
+    arg_parser.add_argument("--timed", action="store_true")
+    arg_parser.add_argument("--debug", action="store_true")
     args = arg_parser.parse_args()
 
     if args.mode == "local":
@@ -66,7 +68,7 @@ if __name__ == "__main__":
         Build query
         """
         result1 = query1(
-            sc, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE
+            spark, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE, api=args.api
         )
 
         if args.timed:
@@ -137,7 +139,7 @@ if __name__ == "__main__":
     Query 2
     """
     if args.q2:
-        result21, result22 = query2(spark, ITALY_HOURLY_FILE)
+        result21, result22 = query2(spark, ITALY_HOURLY_FILE, args.api)
 
         if args.timed:
             t_q2["query_start"] = time.perf_counter()

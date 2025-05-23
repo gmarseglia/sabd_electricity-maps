@@ -1,9 +1,17 @@
-from pyspark.sql import DataFrame
+from pyspark import SparkContext
+from pyspark.sql import DataFrame, SparkSession
 
 from custom_formatter import *
 
+def query1(spark: SparkSession, italy_file: str, sweden_file: str, api: str):
+    if api == "default" or api == "rdd":
+        return query_1_rdd(spark.sparkContext, italy_file, sweden_file)
 
-def query1(sc, italy_file, sweden_file) -> DataFrame:
+    if api == "df":
+        return query_1_df(spark, italy_file, sweden_file)
+
+
+def query_1_rdd(sc: SparkContext, italy_file: str, sweden_file: str):
     italy_rdd = sc.textFile(italy_file)
     sweden_rdd = sc.textFile(sweden_file)
 
@@ -50,3 +58,6 @@ def query1(sc, italy_file, sweden_file) -> DataFrame:
     )
 
     return query_1
+
+def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
+    raise NotImplementedError

@@ -1,4 +1,5 @@
 # Query 2.2
+from pyspark import SparkContext
 from pyspark.sql.connect.session import SparkSession
 from pyspark.sql.functions import col, split, avg, desc
 from tabulate import tabulate
@@ -6,7 +7,15 @@ from tabulate import tabulate
 from custom_formatter import *
 
 
-def query2(spark: SparkSession, italy_file: str):
+def query2(spark: SparkSession, italy_file: str, api: str):
+    if api == "default" or api == "df":
+        return query2_df(spark, italy_file)
+
+    if api == "rdd":
+        return query2_rdd(spark.sparkContext, italy_file)
+
+
+def query2_df(spark: SparkSession, italy_file: str):
     df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(*COLUMN_NAMES_RAW)
 
     df = df.withColumn('Year', split(col("Datetime"), "-").getItem(0)) \
@@ -24,9 +33,9 @@ def query2(spark: SparkSession, italy_file: str):
     df_sorted_by_free = df_avg.sort(desc('avg_carbon_free_energy'))
 
     # df_sorted_by_direct = df_sorted_by_direct.coalesce(1)
-        
+
     # df_sorted_by_free = df_sorted_by_free.coalesce(1)
-    
+
     return df_sorted_by_direct, df_sorted_by_free
 
     # italy_rdd = sc.textFile(italy_file)
@@ -54,3 +63,6 @@ def query2(spark: SparkSession, italy_file: str):
     # worst_5 = by_c02_intensity.takeOrdered(5, lambda x: -x[0])
     # 
     # return
+
+def query2_rdd(sc: SparkContext, italy_file: str):
+    raise NotImplementedError
