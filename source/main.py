@@ -178,34 +178,41 @@ if __name__ == "__main__":
             if args.timed:
                 t_q2["hdfs_start"] = time.perf_counter()
 
-            result_21.coalesce(1).write.mode("overwrite").csv(
+            if args.api == "default" or args.api == "rdd":
+                output_21 = result_21.toDF(QUERY_2_COLUMNS)
+                output_22 = result_22.toDF(QUERY_2_COLUMNS)
+            elif args.api == "df":
+                output_21 = result_21
+                output_22 = result_22
+
+            output_21.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2/{args.api}/by_direct-all", header=True
             )
 
-            top_21 = spark.createDataFrame(result_21.head(5), schema=result_21.schema)
+            top_21 = spark.createDataFrame(output_21.head(5), schema=output_21.schema)
             top_21.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2/{args.api}/by_direct-top-{args.api}",
                 header=True,
             )
 
             bottom_21 = spark.createDataFrame(
-                result_21.tail(5), schema=result_21.schema
+                output_21.tail(5), schema=output_21.schema
             )
             bottom_21.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2/{args.api}/by_direct-bottom", header=True
             )
 
-            result_22.coalesce(1).write.mode("overwrite").csv(
+            output_22.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2/{args.api}/by_free-all", header=True
             )
 
-            top_22 = spark.createDataFrame(result_22.head(5), schema=result_22.schema)
+            top_22 = spark.createDataFrame(output_22.head(5), schema=output_22.schema)
             top_22.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2/{args.api}/by_free-top", header=True
             )
 
             bottom_22 = spark.createDataFrame(
-                result_22.tail(5), schema=result_22.schema
+                output_22.tail(5), schema=output_22.schema
             )
             bottom_22.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2/{args.api}/by_free-bottom", header=True
@@ -219,7 +226,7 @@ if __name__ == "__main__":
         if args.save_influx:
             if args.timed:
                 t_q2["influx_start"] = time.perf_counter()
-                
+
             for row in result_21.collect():
                 point = (
                     Point("query_2")
@@ -228,7 +235,7 @@ if __name__ == "__main__":
                     .time(datetime.strptime(f"{row[0]}-{row[1]}", "%Y-%m"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
-            
+
             if args.timed:
                 t_q2["influx_end"] = time.perf_counter()
                 t_q2["influx_duration"] = round(

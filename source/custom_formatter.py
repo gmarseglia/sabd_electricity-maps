@@ -5,7 +5,7 @@ QUERY_1_COLUMNS = [
 ]
 
 QUERY_2_COLUMNS =  [
-    "Year", "Month", "CO2 Intensity", "C02 Free"
+    "Year", "Month", "CO2 Intensity", "Carbon Free"
 ]
 
 COLUMN_NAMES_RAW = [
