@@ -9,7 +9,8 @@ QUERY_1_COLUMNS = [
     "cfe-max",
 ]
 
-QUERY_2_COLUMNS = ["Year", "Month", "CO2 Intensity", "Carbon Free"]
+# QUERY_2_COLUMNS = ["Year", "Month", "CO2 Intensity", "Carbon Free"]
+QUERY_2_COLUMNS = ["date", "carbon-intensity", "cfe"]
 
 COLUMN_NAMES_RAW = [
     "Datetime",

@@ -228,9 +228,9 @@ if __name__ == "__main__":
             for row in result_21.collect():
                 point = (
                     Point("query_2")
-                    .field("co2_intensity", row["avg_CO2_intensity_direct"])
-                    .field("avg_c02_free", row["avg_carbon_free_energy"])
-                    .time(datetime.strptime(f"{row[0]}-{row[1]}", "%Y-%m"))
+                    .field(QUERY_2_COLUMNS[1], row[1])
+                    .field(QUERY_2_COLUMNS[2], row[2])
+                    .time(datetime.strptime(row[0], "%Y_%m"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
 

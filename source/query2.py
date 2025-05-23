@@ -29,15 +29,19 @@ def query2_df(spark: SparkSession, italy_file: str):
     df_avg = (
         df.groupBy("Year", "Month")
         .agg(
-            F.avg("CO2_intensity_direct").alias("CO2 Intensity"),
-            F.avg("Carbon_free_energy_percent").alias("Carbon Free"),
+            F.avg("CO2_intensity_direct").alias(QUERY_2_COLUMNS[1]),
+            F.avg("Carbon_free_energy_percent").alias(QUERY_2_COLUMNS[2]),
         )
         .cache()
     )
 
-    df_by_direct = df_avg.orderBy(F.col("avg_CO2_intensity_direct").desc()).cache()
+    df_avg = df_avg.withColumn(
+        "date", F.concat(F.col("Year"), F.lit("_"), F.col("Month"))
+    ).select(*QUERY_2_COLUMNS)
 
-    df_by_free = df_avg.orderBy(F.col("avg_carbon_free_energy").desc()).cache()
+    df_by_direct = df_avg.orderBy(F.col(QUERY_2_COLUMNS[1]).desc()).cache()
+
+    df_by_free = df_avg.orderBy(F.col(QUERY_2_COLUMNS[2]).desc()).cache()
 
     return df_by_direct, df_by_free
 
@@ -57,10 +61,14 @@ def query2_rdd(sc: SparkContext, italy_file: str):
         lambda x: (x[0], (x[1][0] / x[1][2], x[1][1] / x[1][2]))
     )
 
-    avg = avg.map(lambda x: (x[0][0], x[0][1], x[0][2], x[1][0], x[1][1])).cache()
+    avg = (
+        avg.map(lambda x: (x[0][0], x[0][1], x[0][2], x[1][0], x[1][1]))
+        .map(lambda x: (x[1] + "_" + x[2], x[3], x[4]))
+        .cache()
+    )
 
-    rdd_by_direct = avg.sortBy(lambda x: x[3], ascending=False).cache()
+    rdd_by_direct = avg.sortBy(lambda x: x[1], ascending=False).cache()
 
-    rdd_by_free = avg.sortBy(lambda x: x[4], ascending=False).cache()
+    rdd_by_free = avg.sortBy(lambda x: x[2], ascending=False).cache()
 
     return rdd_by_direct, rdd_by_free
