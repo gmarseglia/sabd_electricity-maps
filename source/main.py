@@ -95,14 +95,12 @@ if __name__ == "__main__":
                 t_q1["hdfs_start"] = time.perf_counter()
 
             if args.api == "default" or args.api == "rdd":
-                output = (
-                    result1.toDF(QUERY_1_COLUMNS).coalesce(1).sort(["Country", "Year"])
-                )
+                output = result1.toDF(QUERY_1_COLUMNS)
             elif args.api == "df":
                 output = result1
 
             output.toDF(*QUERY_1_COLUMNS).coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_1-{args.api}", header=True
+                f"{PREFIX}/results/query_1/{args.api}", header=True
             )
 
             if args.timed:
@@ -119,14 +117,14 @@ if __name__ == "__main__":
             for row in result1.collect():
                 point = (
                     Point("query_1")
-                    .tag("country", row[0])
-                    .field("avg_co2_intensity", row[2])
-                    .field("min_co2_intensity", row[3])
-                    .field("max_co2_intensity", row[4])
-                    .field("avg_c02_free", row[5])
-                    .field("min_c02_free", row[6])
-                    .field("max_c02_free", row[7])
-                    .time(datetime.strptime(row[1], "%Y"))
+                    .tag(QUERY_1_COLUMNS[1], row[1])
+                    .field(QUERY_1_COLUMNS[2], row[2])
+                    .field(QUERY_1_COLUMNS[3], row[3])
+                    .field(QUERY_1_COLUMNS[4], row[4])
+                    .field(QUERY_1_COLUMNS[5], row[5])
+                    .field(QUERY_1_COLUMNS[6], row[6])
+                    .field(QUERY_1_COLUMNS[7], row[7])
+                    .time(datetime.strptime(row[0], "%Y"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
             if args.timed:

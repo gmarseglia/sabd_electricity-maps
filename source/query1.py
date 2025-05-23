@@ -60,6 +60,11 @@ def query_1_rdd(sc: SparkContext, italy_file: str, sweden_file: str):
         .sortBy(lambda x: x[0] + x[1], True)
     )
 
+    # Use project format
+    query_1 = query_1.map(
+        lambda x: (x[1], shorten_country(str(x[0])), x[2], x[3], x[4], x[5], x[6], x[7])
+    )
+
     return query_1
 
 
@@ -82,12 +87,19 @@ def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
     )
 
     df = df.groupBy("Country", "Year").agg(
-        F.avg("CO2_intensity_direct").alias("Avg CO2 Intensity"),
-        F.min("CO2_intensity_direct").alias("Min CO2 Intensity"),
-        F.max("CO2_intensity_direct").alias("Max CO2 Intensity"),
-        F.avg("Carbon_free_energy_percent").alias("Avg Carbon Free"),
-        F.min("Carbon_free_energy_percent").alias("Min Carbon Free"),
-        F.max("Carbon_free_energy_percent").alias("Max Carbon Free"),
+        F.avg("CO2_intensity_direct").alias(QUERY_1_COLUMNS[2]),
+        F.min("CO2_intensity_direct").alias(QUERY_1_COLUMNS[3]),
+        F.max("CO2_intensity_direct").alias(QUERY_1_COLUMNS[4]),
+        F.avg("Carbon_free_energy_percent").alias(QUERY_1_COLUMNS[5]),
+        F.min("Carbon_free_energy_percent").alias(QUERY_1_COLUMNS[6]),
+        F.max("Carbon_free_energy_percent").alias(QUERY_1_COLUMNS[7]),
+    )
+
+    udf_shorten_country = F.udf(shorten_country, "string")
+    df = (
+        df.withColumn("country", udf_shorten_country(df["Country"]))
+        .withColumnRenamed("Year", "date")
+        .select(*QUERY_1_COLUMNS)
     )
 
     return df
