@@ -85,9 +85,9 @@ def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
         F.avg("CO2_intensity_direct").alias("Avg CO2 Intensity"),
         F.min("CO2_intensity_direct").alias("Min CO2 Intensity"),
         F.max("CO2_intensity_direct").alias("Max CO2 Intensity"),
-        F.avg("Carbon_free_energy_percent").alias("Avg C02 Free"),
-        F.min("Carbon_free_energy_percent").alias("Min C02 Free"),
-        F.max("Carbon_free_energy_percent").alias("Max C02 Free"),
+        F.avg("Carbon_free_energy_percent").alias("Avg Carbon Free"),
+        F.min("Carbon_free_energy_percent").alias("Min Carbon Free"),
+        F.max("Carbon_free_energy_percent").alias("Max Carbon Free"),
     )
 
     return df

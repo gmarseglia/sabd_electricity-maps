@@ -28,8 +28,8 @@ def query2_df(spark: SparkSession, italy_file: str):
     df_avg = (
         df.groupBy("Year", "Month")
         .agg(
-            F.avg("CO2_intensity_direct").alias("avg_CO2_intensity_direct"),
-            F.avg("Carbon_free_energy_percent").alias("avg_carbon_free_energy"),
+            F.avg("CO2_intensity_direct").alias("Avg CO2 Intensity"),
+            F.avg("Carbon_free_energy_percent").alias("Avg Carbon Free"),
         )
         .cache()
     )
