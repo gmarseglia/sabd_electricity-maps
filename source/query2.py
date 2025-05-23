@@ -1,7 +1,7 @@
 # Query 2.2
 from pyspark import SparkContext
 from pyspark.sql.connect.session import SparkSession
-from pyspark.sql.functions import col, split, avg, desc
+from pyspark.sql import functions as F
 from tabulate import tabulate
 
 from custom_formatter import *
@@ -21,27 +21,42 @@ def query2_df(spark: SparkSession, italy_file: str):
     )
 
     df = (
-        df.withColumn("Year", split(col("Datetime"), "-").getItem(0))
-        .withColumn("Month", split(col("Datetime"), "-").getItem(1))
+        df.withColumn("Year", F.split(F.col("Datetime"), "-").getItem(0))
+        .withColumn("Month", F.split(F.col("Datetime"), "-").getItem(1))
+        .select(*COLUMN_NAMES_DF_2)
+    )
+
+    df_avg = (
+        df.groupBy("Year", "Month")
+        .agg(
+            F.avg("CO2_intensity_direct").alias("avg_CO2_intensity_direct"),
+            F.avg("Carbon_free_energy_percent").alias("avg_carbon_free_energy"),
+        )
         .cache()
     )
 
-    df = df.select(*COLUMN_NAMES_DF_2)
+    # df_sorted_by_direct = df_avg.sort(F.desc("avg_CO2_intensity_direct"))
+    # df_sorted_by_free = df_avg.sort(F.desc("avg_carbon_free_energy"))
 
-    df_avg = df.groupBy("Year", "Month").agg(
-        avg("CO2_intensity_direct").alias("avg_CO2_intensity_direct"),
-        avg("Carbon_free_energy_percent").alias("avg_carbon_free_energy"),
-    )
+    df_by_direct = df_avg.orderBy(F.col("avg_CO2_intensity_direct").desc()).cache()
+    df_by_direct_top = df_by_direct.head(5)
+    df_by_direct_bottom = df_by_direct.tail(5)
 
-    df_sorted_by_direct = df_avg.sort(desc("avg_CO2_intensity_direct"))
-    df_sorted_by_free = df_avg.sort(desc("avg_carbon_free_energy"))
+    print(tabulate(df_by_direct_top, headers=QUERY_2_COLUMNS, tablefmt="grid"))
+    print(tabulate(df_by_direct_bottom, headers=QUERY_2_COLUMNS, tablefmt="grid"))
 
-    # df_sorted_by_direct = df_sorted_by_direct.coalesce(1)
+    df_by_free = df_avg.orderBy(F.col("avg_carbon_free_energy").desc()).cache()
+    df_by_free_top = df_by_free.head(5)
+    df_by_free_bottom = df_by_free.tail(5)
 
-    # df_sorted_by_free = df_sorted_by_free.coalesce(1)
+    print(tabulate(df_by_free_top, headers=QUERY_2_COLUMNS, tablefmt="grid"))
+    print(tabulate(df_by_free_bottom, headers=QUERY_2_COLUMNS, tablefmt="grid"))
 
-    return df_sorted_by_direct, df_sorted_by_free
+    return df_by_direct, df_by_free
 
+
+def query2_rdd(sc: SparkContext, italy_file: str):
+    raise NotImplementedError
     # italy_rdd = sc.textFile(italy_file)
     #
     # base = italy_rdd \
@@ -67,7 +82,3 @@ def query2_df(spark: SparkSession, italy_file: str):
     # worst_5 = by_c02_intensity.takeOrdered(5, lambda x: -x[0])
     #
     # return
-
-
-def query2_rdd(sc: SparkContext, italy_file: str):
-    raise NotImplementedError

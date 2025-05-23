@@ -1,5 +1,5 @@
 from pyspark import SparkContext
-from pyspark.sql import SparkSession, functions
+from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.functions import col, split
 from tabulate import tabulate
 
@@ -82,12 +82,12 @@ def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
     )
 
     df = df.groupBy("Country", "Year").agg(
-        functions.avg("CO2_intensity_direct").alias("Avg CO2 Intensity"),
-        functions.min("CO2_intensity_direct").alias("Min CO2 Intensity"),
-        functions.max("CO2_intensity_direct").alias("Max CO2 Intensity"),
-        functions.avg("Carbon_free_energy_percent").alias("Avg C02 Free"),
-        functions.min("Carbon_free_energy_percent").alias("Min C02 Free"),
-        functions.max("Carbon_free_energy_percent").alias("Max C02 Free"),
+        F.avg("CO2_intensity_direct").alias("Avg CO2 Intensity"),
+        F.min("CO2_intensity_direct").alias("Min CO2 Intensity"),
+        F.max("CO2_intensity_direct").alias("Max CO2 Intensity"),
+        F.avg("Carbon_free_energy_percent").alias("Avg C02 Free"),
+        F.min("Carbon_free_energy_percent").alias("Min C02 Free"),
+        F.max("Carbon_free_energy_percent").alias("Max C02 Free"),
     )
 
     return df
