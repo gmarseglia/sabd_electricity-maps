@@ -156,33 +156,61 @@ if __name__ == "__main__":
     Query 2
     """
     if args.q2:
-        result21, result22 = query2(spark, ITALY_HOURLY_FILE, args.api)
+        result_21, result_22 = query2(spark, ITALY_HOURLY_FILE, args.api)
 
         if args.timed:
             t_q2["query_start"] = time.perf_counter()
-            result21.collect()
-            result22.collect()
+            result_21.collect()
+            result_22.collect()
             t_q2["query_end"] = time.perf_counter()
             t_q2["query_duration"] = round(t_q2["query_end"] - t_q2["query_start"], 3)
             print(f"Query 2 took {t_q2['query_duration']} seconds")
 
         if args.collect:
             print(
-                tabulate(result21.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
+                tabulate(result_21.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
             )
             print(
-                tabulate(result22.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
+                tabulate(result_22.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
             )
 
         if args.save_fs:
             if args.timed:
                 t_q2["hdfs_start"] = time.perf_counter()
-            result21.write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2-by_direct-no_coalesce", header=True
+
+            result_21.coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}/by_direct-all", header=True
             )
-            result22.write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2-by_free-no_coalesce", header=True
+
+            top_21 = spark.createDataFrame(result_21.head(5), schema=result_21.schema)
+            top_21.coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}/by_direct-top-{args.api}",
+                header=True,
             )
+
+            bottom_21 = spark.createDataFrame(
+                result_21.tail(5), schema=result_21.schema
+            )
+            bottom_21.coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}/by_direct-bottom", header=True
+            )
+
+            result_22.coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}/by_free-all", header=True
+            )
+
+            top_22 = spark.createDataFrame(result_22.head(5), schema=result_22.schema)
+            top_22.coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}/by_free-top", header=True
+            )
+
+            bottom_22 = spark.createDataFrame(
+                result_22.tail(5), schema=result_22.schema
+            )
+            bottom_22.coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}/by_free-bottom", header=True
+            )
+
             if args.timed:
                 t_q2["hdfs_end"] = time.perf_counter()
                 t_q2["hdfs_duration"] = round(t_q2["hdfs_end"] - t_q2["hdfs_start"], 3)
@@ -191,7 +219,8 @@ if __name__ == "__main__":
         if args.save_influx:
             if args.timed:
                 t_q2["influx_start"] = time.perf_counter()
-            for row in result21.collect():
+                
+            for row in result_21.collect():
                 point = (
                     Point("query_2")
                     .field("co2_intensity", row["avg_CO2_intensity_direct"])
@@ -199,6 +228,7 @@ if __name__ == "__main__":
                     .time(datetime.strptime(f"{row[0]}-{row[1]}", "%Y-%m"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
+            
             if args.timed:
                 t_q2["influx_end"] = time.perf_counter()
                 t_q2["influx_duration"] = round(
@@ -211,6 +241,7 @@ if __name__ == "__main__":
                 Point("t_q2")
                 .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
                 .tag("mode", args.mode)
+                .tag("api", args.api)
             )
             point.field("query_duration", t_q2["query_duration"])
             if args.save_fs:
