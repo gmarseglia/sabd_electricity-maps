@@ -1,7 +1,10 @@
 from pyspark import SparkContext
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import SparkSession, functions
+from pyspark.sql.functions import col, split
+from tabulate import tabulate
 
 from custom_formatter import *
+
 
 def query1(spark: SparkSession, italy_file: str, sweden_file: str, api: str):
     if api == "default" or api == "rdd":
@@ -59,5 +62,32 @@ def query_1_rdd(sc: SparkContext, italy_file: str, sweden_file: str):
 
     return query_1
 
+
 def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
-    raise NotImplementedError
+    # Read data
+    df_it = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+        *COLUMN_NAMES_RAW
+    )
+    df_se = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
+        *COLUMN_NAMES_RAW
+    )
+
+    # Format data
+    df = df_it.union(df_se)
+
+    df = (
+        df.withColumn("Year", split(col("Datetime"), "-").getItem(0))
+        .select(*COLUMN_NAMES_DF_1)
+        .cache()
+    )
+
+    df = df.groupBy("Country", "Year").agg(
+        functions.avg("CO2_intensity_direct").alias("Avg CO2 Intensity"),
+        functions.min("CO2_intensity_direct").alias("Min CO2 Intensity"),
+        functions.max("CO2_intensity_direct").alias("Max CO2 Intensity"),
+        functions.avg("Carbon_free_energy_percent").alias("Avg C02 Free"),
+        functions.min("Carbon_free_energy_percent").alias("Min C02 Free"),
+        functions.max("Carbon_free_energy_percent").alias("Max C02 Free"),
+    )
+
+    return df

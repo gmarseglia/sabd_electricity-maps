@@ -15,7 +15,13 @@ COLUMN_NAMES_RAW = [
     'Data_source', 'Data_estimated', 'Data_estimation_method'
 ]
 
-COLUMN_NAMES_DF = [
+COLUMN_NAMES_DF_1 = [
+    'Year', 'Country', 'Zone_id',
+    'CO2_intensity_direct',
+    'Carbon_free_energy_percent'
+]
+
+COLUMN_NAMES_DF_2 = [
     'Year', 'Month', 'Country', 'Zone_id',
     'CO2_intensity_direct',
     'Carbon_free_energy_percent'

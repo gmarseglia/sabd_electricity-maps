@@ -19,7 +19,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--q1", action="store_true")
     arg_parser.add_argument("--q2", action="store_true")
     arg_parser.add_argument("--collect", action="store_true")
-    arg_parser.add_argument("--save-hdfs", dest="save_hdfs", action="store_true")
+    arg_parser.add_argument("--save-fs", dest="save_fs", action="store_true")
     arg_parser.add_argument("--save-influx", dest="save_influx", action="store_true")
     arg_parser.add_argument("--timed", action="store_true")
     arg_parser.add_argument("--debug", action="store_true")
@@ -68,7 +68,10 @@ if __name__ == "__main__":
         Build query
         """
         result1 = query1(
-            spark, italy_file=ITALY_HOURLY_FILE, sweden_file=SWEDEN_HOURLY_FILE, api=args.api
+            spark,
+            italy_file=ITALY_HOURLY_FILE,
+            sweden_file=SWEDEN_HOURLY_FILE,
+            api=args.api,
         )
 
         if args.timed:
@@ -87,20 +90,32 @@ if __name__ == "__main__":
         """
         Save results to HDFS
         """
-        if args.save_hdfs:
-            t_q1["hdfs_start"] = time.perf_counter()
-            result1.toDF(QUERY_1_COLUMNS).coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_1", header=True
+        if args.save_fs:
+            if args.timed:
+                t_q1["hdfs_start"] = time.perf_counter()
+
+            if args.api == "default" or args.api == "rdd":
+                output = (
+                    result1.toDF(QUERY_1_COLUMNS).coalesce(1).sort(["Country", "Year"])
+                )
+            elif args.api == "df":
+                output = result1
+
+            output.toDF(*QUERY_1_COLUMNS).coalesce(1).write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_1-{args.api}", header=True
             )
-            t_q1["hdfs_end"] = time.perf_counter()
-            t_q1["hdfs_duration"] = round(t_q1["hdfs_end"] - t_q1["hdfs_start"], 3)
-            print(f"HDFS took {t_q1['hdfs_duration']} seconds")
+
+            if args.timed:
+                t_q1["hdfs_end"] = time.perf_counter()
+                t_q1["hdfs_duration"] = round(t_q1["hdfs_end"] - t_q1["hdfs_start"], 3)
+                print(f"HDFS took {t_q1['hdfs_duration']} seconds")
 
         """
         Save results to InfluxDB
         """
         if args.save_influx:
-            t_q1["influx_start"] = time.perf_counter()
+            if args.timed:
+                t_q1["influx_start"] = time.perf_counter()
             for row in result1.collect():
                 point = (
                     Point("query_1")
@@ -114,11 +129,12 @@ if __name__ == "__main__":
                     .time(datetime.strptime(row[1], "%Y"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
-            t_q1["influx_end"] = time.perf_counter()
-            t_q1["influx_duration"] = round(
-                t_q1["influx_end"] - t_q1["influx_start"], 3
-            )
-            print(f"Influx took {t_q1['influx_duration']} seconds")
+            if args.timed:
+                t_q1["influx_end"] = time.perf_counter()
+                t_q1["influx_duration"] = round(
+                    t_q1["influx_end"] - t_q1["influx_start"], 3
+                )
+                print(f"Influx took {t_q1['influx_duration']} seconds")
 
         """
         Save timed results to InfluxDB
@@ -128,9 +144,10 @@ if __name__ == "__main__":
                 Point("t_q1")
                 .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
                 .tag("mode", args.mode)
+                .tag("api", args.api)
             )
             point.field("query_duration", t_q1["query_duration"])
-            if args.save_hdfs:
+            if args.save_fs:
                 point.field("hdfs_duration", t_q1["hdfs_duration"])
             point.field("influx_duration", t_q1["influx_duration"])
             write_api.write(bucket=bucket, org=org, record=point)
@@ -157,20 +174,23 @@ if __name__ == "__main__":
                 tabulate(result22.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
             )
 
-        if args.save_hdfs:
-            t_q2["hdfs_start"] = time.perf_counter()
+        if args.save_fs:
+            if args.timed:
+                t_q2["hdfs_start"] = time.perf_counter()
             result21.write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2-by_direct-no_coalesce", header=True
             )
             result22.write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_2-by_free-no_coalesce", header=True
             )
-            t_q2["hdfs_end"] = time.perf_counter()
-            t_q2["hdfs_duration"] = round(t_q2["hdfs_end"] - t_q2["hdfs_start"], 3)
-            print(f"HDFS took {t_q2['hdfs_duration']} seconds")
+            if args.timed:
+                t_q2["hdfs_end"] = time.perf_counter()
+                t_q2["hdfs_duration"] = round(t_q2["hdfs_end"] - t_q2["hdfs_start"], 3)
+                print(f"HDFS took {t_q2['hdfs_duration']} seconds")
 
         if args.save_influx:
-            t_q2["influx_start"] = time.perf_counter()
+            if args.timed:
+                t_q2["influx_start"] = time.perf_counter()
             for row in result21.collect():
                 point = (
                     Point("query_2")
@@ -179,11 +199,12 @@ if __name__ == "__main__":
                     .time(datetime.strptime(f"{row[0]}-{row[1]}", "%Y-%m"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
-            t_q2["influx_end"] = time.perf_counter()
-            t_q2["influx_duration"] = round(
-                t_q2["influx_end"] - t_q2["influx_start"], 3
-            )
-            print(f"Influx took {t_q2['influx_duration']} seconds")
+            if args.timed:
+                t_q2["influx_end"] = time.perf_counter()
+                t_q2["influx_duration"] = round(
+                    t_q2["influx_end"] - t_q2["influx_start"], 3
+                )
+                print(f"Influx took {t_q2['influx_duration']} seconds")
 
         if args.timed and args.save_influx:
             point = (
@@ -192,7 +213,7 @@ if __name__ == "__main__":
                 .tag("mode", args.mode)
             )
             point.field("query_duration", t_q2["query_duration"])
-            if args.save_hdfs:
+            if args.save_fs:
                 point.field("hdfs_duration", t_q2["hdfs_duration"])
             point.field("influx_duration", t_q2["influx_duration"])
 

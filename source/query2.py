@@ -16,21 +16,25 @@ def query2(spark: SparkSession, italy_file: str, api: str):
 
 
 def query2_df(spark: SparkSession, italy_file: str):
-    df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(*COLUMN_NAMES_RAW)
-
-    df = df.withColumn('Year', split(col("Datetime"), "-").getItem(0)) \
-        .withColumn('Month', split(col("Datetime"), "-").getItem(1)) \
-        .cache()
-
-    df = df.select(*COLUMN_NAMES_DF)
-
-    df_avg = df.groupBy('Year', 'Month').agg(
-        avg('CO2_intensity_direct').alias('avg_CO2_intensity_direct'),
-        avg('Carbon_free_energy_percent').alias('avg_carbon_free_energy'),
+    df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+        *COLUMN_NAMES_RAW
     )
 
-    df_sorted_by_direct = df_avg.sort(desc('avg_CO2_intensity_direct'))
-    df_sorted_by_free = df_avg.sort(desc('avg_carbon_free_energy'))
+    df = (
+        df.withColumn("Year", split(col("Datetime"), "-").getItem(0))
+        .withColumn("Month", split(col("Datetime"), "-").getItem(1))
+        .cache()
+    )
+
+    df = df.select(*COLUMN_NAMES_DF_2)
+
+    df_avg = df.groupBy("Year", "Month").agg(
+        avg("CO2_intensity_direct").alias("avg_CO2_intensity_direct"),
+        avg("Carbon_free_energy_percent").alias("avg_carbon_free_energy"),
+    )
+
+    df_sorted_by_direct = df_avg.sort(desc("avg_CO2_intensity_direct"))
+    df_sorted_by_free = df_avg.sort(desc("avg_carbon_free_energy"))
 
     # df_sorted_by_direct = df_sorted_by_direct.coalesce(1)
 
@@ -52,7 +56,7 @@ def query2_df(spark: SparkSession, italy_file: str):
     # print(avg.take(10))
     #
     # best_5_co2_intensity = avg.takeOrdered(5, lambda x : x[1][0])
-    # 
+    #
     # by_c02_intensity = hourly_lines \
     #     .filter(lambda x: get_country(x) == "Italy") \
     #     .map(lambda x: (get_year(x), get_month(x), x)) \
@@ -61,8 +65,9 @@ def query2_df(spark: SparkSession, italy_file: str):
     #
     # best_5 = by_c02_intensity.takeOrdered(5, lambda x: x[0])
     # worst_5 = by_c02_intensity.takeOrdered(5, lambda x: -x[0])
-    # 
+    #
     # return
+
 
 def query2_rdd(sc: SparkContext, italy_file: str):
     raise NotImplementedError
