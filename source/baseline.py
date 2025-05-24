@@ -1,4 +1,5 @@
 from math import inf
+import time
 from hdfs import InsecureClient
 import argparse
 
@@ -76,6 +77,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default="local")
     parser.add_argument("--q1", action="store_true")
+    parser.add_argument("--timed", action="store_true")
     args = parser.parse_args()
 
     if args.mode == "composed":
@@ -83,6 +85,8 @@ if __name__ == "__main__":
         client = InsecureClient("http://master:9870", user="spark")
 
     if args.q1:
+        t_q1 = {}
+
         results = {
             "counts": {},
             "means": {},
@@ -90,8 +94,18 @@ if __name__ == "__main__":
             "mins": {},
         }
 
+        t_q1["query_start"] = time.perf_counter()
+
         q1(ITALY_HOURLY_FILE, results)
         q1(SWEDEN_HOURLY_FILE, results)
+
+        t_q1["query_end"] = time.perf_counter()
+
+        if args.timed:
+            t_q1["query_duration"] = round(t_q1["query_end"] - t_q1["query_start"], 3)
+            print(f"Query 1 took {t_q1['query_duration']} seconds")
+
+        t_q1["fs_start"] = time.perf_counter()
 
         if args.mode == "local":
             with open("../results/query_1/baseline/results.csv", "w") as file:
@@ -107,3 +121,9 @@ if __name__ == "__main__":
                 file.write(Q1_HEADER.encode("utf-8"))
                 for key in results["counts"].keys():
                     file.write(q1_result_to_line(results, key).encode("utf-8"))
+
+        t_q1["fs_end"] = time.perf_counter()
+
+        if args.timed:
+            t_q1["fs_duration"] = round(t_q1["fs_end"] - t_q1["fs_start"], 3)
+            print(f"FS took {t_q1['fs_duration']} seconds")
