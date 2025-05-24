@@ -82,6 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--mode", type=str, default="local")
     parser.add_argument("--q1", action="store_true")
     parser.add_argument("--timed", action="store_true")
+    parser.add_argument("--save-fs", dest="save_fs", action="store_true")
     parser.add_argument("--save-influx", dest="save_influx", action="store_true")
     args = parser.parse_args()
 
@@ -114,20 +115,21 @@ if __name__ == "__main__":
             t_q1["query_duration"] = round(t_q1["query_end"] - t_q1["query_start"], 3)
             print(f"Query 1 took {t_q1['query_duration']} seconds")
 
-        if args.mode == "local":
-            with open("../results/query_1/baseline/results.csv", "w") as file:
-                file.write(Q1_HEADER)
-                for key in results["counts"].keys():
-                    file.write(q1_result_to_line(results, key))
-        elif args.mode == "composed":
-            client.makedirs("/results/query_1/baseline")
-            with client.write(
-                "/results/query_1/baseline/results.csv", overwrite=True
-            ) as file:
-                # Ensure content is written in bytes
-                file.write(Q1_HEADER.encode("utf-8"))
-                for key in results["counts"].keys():
-                    file.write(q1_result_to_line(results, key).encode("utf-8"))
+        if args.save_fs:
+            if args.mode == "local":
+                with open("../results/query_1/baseline/results.csv", "w") as file:
+                    file.write(Q1_HEADER)
+                    for key in results["counts"].keys():
+                        file.write(q1_result_to_line(results, key))
+            elif args.mode == "composed":
+                client.makedirs("/results/query_1/baseline")
+                with client.write(
+                    "/results/query_1/baseline/results.csv", overwrite=True
+                ) as file:
+                    # Ensure content is written in bytes
+                    file.write(Q1_HEADER.encode("utf-8"))
+                    for key in results["counts"].keys():
+                        file.write(q1_result_to_line(results, key).encode("utf-8"))
 
     if args.timed and args.save_influx:
         bucket = "mybucket"
