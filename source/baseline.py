@@ -116,6 +116,20 @@ def q2(path, results):
     results["sorted_by_cfe"] = keys_by_cfe
 
 
+def open_file_by_mode(path, mode):
+    if mode == "local":
+        return open(".." + path, "w")
+    elif mode == "composed":
+        return client.write(path, overwrite=True)
+
+
+def write_file_by_mode(file, content, mode):
+    if mode == "local":
+        file.write(content)
+    elif mode == "composed":
+        file.write(content.encode("utf-8"))
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -158,19 +172,18 @@ if __name__ == "__main__":
 
         if args.save_fs:
             if args.mode == "local":
-                with open("../results/query_1/baseline/results.csv", "w") as file:
-                    file.write(Q1_HEADER)
-                    for key in results_q1["counts"].keys():
-                        file.write(q1_result_to_line(results_q1, key))
+                os.makedirs("../results/query_1/baseline", exist_ok=True)
             elif args.mode == "composed":
                 client.makedirs("/results/query_1/baseline")
-                with client.write(
-                    "/results/query_1/baseline/results.csv", overwrite=True
-                ) as file:
-                    # Ensure content is written in bytes
-                    file.write(Q1_HEADER.encode("utf-8"))
-                    for key in results_q1["counts"].keys():
-                        file.write(q1_result_to_line(results_q1, key).encode("utf-8"))
+
+            with open_file_by_mode(
+                "/results/query_1/baseline/results.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q1_HEADER, args.mode)
+                for key in results_q1["counts"].keys():
+                    write_file_by_mode(
+                        file, q1_result_to_line(results_q1, key), args.mode
+                    )
 
     if args.q2:
         results_q2 = {
@@ -193,52 +206,62 @@ if __name__ == "__main__":
         if args.save_fs:
             if args.mode == "local":
                 os.makedirs("../results/query_2/baseline", exist_ok=True)
-
-                with open(
-                    "../results/query_2/baseline/by_carbon_intensity-all.csv", "w"
-                ) as file:
-                    file.write(Q2_HEADER)
-                    for key in results_q2["sorted_by_carbon_intensity"]:
-                        file.write(q2_result_to_line(results_q2, key))
-
-                with open(
-                    "../results/query_2/baseline/by_carbon_intensity-top.csv", "w"
-                ) as file:
-                    file.write(Q2_HEADER)
-                    for key in results_q2["sorted_by_carbon_intensity"][:5]:
-                        file.write(q2_result_to_line(results_q2, key))
-
-                with open(
-                    "../results/query_2/baseline/by_carbon_intensity-bottom.csv", "w"
-                ) as file:
-                    file.write(Q2_HEADER)
-                    for key in results_q2["sorted_by_carbon_intensity"][-5:]:
-                        file.write(q2_result_to_line(results_q2, key))
-
-                with open("../results/query_2/baseline/by_cfe-all.csv", "w") as file:
-                    file.write(Q2_HEADER)
-                    for key in results_q2["sorted_by_cfe"]:
-                        file.write(q2_result_to_line(results_q2, key))
-
-                with open("../results/query_2/baseline/by_cfe-top.csv", "w") as file:
-                    file.write(Q2_HEADER)
-                    for key in results_q2["sorted_by_cfe"][:5]:
-                        file.write(q2_result_to_line(results_q2, key))
-
-                with open("../results/query_2/baseline/by_cfe-bottom.csv", "w") as file:
-                    file.write(Q2_HEADER)
-                    for key in results_q2["sorted_by_cfe"][-5:]:
-                        file.write(q2_result_to_line(results_q2, key))
-
             elif args.mode == "composed":
-                client.makedirs("/results/query_1/baseline")
-                with client.write(
-                    "/results/query_1/baseline/results.csv", overwrite=True
-                ) as file:
-                    # Ensure content is written in bytes
-                    file.write(Q1_HEADER.encode("utf-8"))
-                    for key in results_q1["counts"].keys():
-                        file.write(q1_result_to_line(results_q1, key).encode("utf-8"))
+                client.makedirs("/results/query_2/baseline")
+
+            with open_file_by_mode(
+                "/results/query_2/baseline/by_carbon_intensity-all.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q2_HEADER, args.mode)
+                for key in results_q2["sorted_by_carbon_intensity"]:
+                    write_file_by_mode(
+                        file, q2_result_to_line(results_q2, key), args.mode
+                    )
+
+            with open_file_by_mode(
+                "/results/query_2/baseline/by_carbon_intensity-top.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q2_HEADER, args.mode)
+                for key in results_q2["sorted_by_carbon_intensity"][:5]:
+                    write_file_by_mode(
+                        file, q2_result_to_line(results_q2, key), args.mode
+                    )
+
+            with open_file_by_mode(
+                "/results/query_2/baseline/by_carbon_intensity-bottom.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q2_HEADER, args.mode)
+                for key in results_q2["sorted_by_carbon_intensity"][-5:]:
+                    write_file_by_mode(
+                        file, q2_result_to_line(results_q2, key), args.mode
+                    )
+
+            with open_file_by_mode(
+                "/results/query_2/baseline/by_cfe-all.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q2_HEADER, args.mode)
+                for key in results_q2["sorted_by_cfe"]:
+                    write_file_by_mode(
+                        file, q2_result_to_line(results_q2, key), args.mode
+                    )
+
+            with open_file_by_mode(
+                "/results/query_2/baseline/by_cfe-top.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q2_HEADER, args.mode)
+                for key in results_q2["sorted_by_cfe"][:5]:
+                    write_file_by_mode(
+                        file, q2_result_to_line(results_q2, key), args.mode
+                    )
+
+            with open_file_by_mode(
+                "/results/query_2/baseline/by_cfe-bottom.csv", args.mode
+            ) as file:
+                write_file_by_mode(file, Q2_HEADER, args.mode)
+                for key in results_q2["sorted_by_cfe"][-5:]:
+                    write_file_by_mode(
+                        file, q2_result_to_line(results_q2, key), args.mode
+                    )
 
     if args.timed and args.save_influx:
         bucket = "mybucket"
@@ -249,10 +272,10 @@ if __name__ == "__main__":
         write_api = client.write_api(write_options=SYNCHRONOUS)
 
         point = (
-            Point("t_q1")
+            Point("t_q2")
             .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
             .tag("mode", args.mode)
             .tag("api", "baseline")
-            .field("query_duration", t_q1["query_duration"])
+            .field("query_duration", t_q2["query_duration"])
         )
         write_api.write(bucket=bucket, org=org, record=point)
