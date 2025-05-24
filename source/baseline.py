@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from math import inf
+import os
 import time
 from hdfs import InsecureClient
 import argparse
@@ -13,6 +14,7 @@ from custom_formatter import (
     get_c02_free,
     get_co2_intensity,
     get_country,
+    get_month,
     get_year,
     shorten_country,
 )
@@ -20,6 +22,7 @@ from custom_formatter import (
 ITALY_HOURLY_FILE = "/dataset/combined/combined_dataset-italy_hourly.csv"
 SWEDEN_HOURLY_FILE = "/dataset/combined/combined_dataset-sweden_hourly.csv"
 Q1_HEADER = "date,country,carbon-mean,carbon-min,carbon-max,cfe-mean,cfe-min,cfe-max\n"
+Q2_HEADER = "date,carbon-intensity,cfe\n"
 
 
 def read_file(path, mode):
@@ -76,11 +79,49 @@ def q1(path, results):
         mins[key][1] = min(mins[key][1], cfe)
 
 
+def q2_result_to_line(results, key):
+    return f"{key},{results['means'][key][0]},{results['means'][key][1]}\n"
+
+
+def q2(path, results):
+    """
+    Compute mean of carbon-intensity and cfe and sort
+    Aggregation by country, year and month
+    """
+    counts = results["counts"]
+    means = results["means"]
+    for line in read_file(path, args.mode):
+        # print(line.strip())
+        year = get_year(line)
+        month = get_month(line)
+        key = year + "_" + month
+        carbon_intensity = get_co2_intensity(line)
+        cfe = get_c02_free(line)
+
+        if key not in counts:
+            counts[key] = 0
+            means[key] = [0, 0]
+
+        counts[key] += 1
+        means[key][0] = means[key][0] + (carbon_intensity - means[key][0]) / counts[key]
+        means[key][1] = means[key][1] + (cfe - means[key][1]) / counts[key]
+
+    # Sort by means
+    keys_by_carbon_intensity = sorted(
+        means.keys(), key=lambda k: means[k][0], reverse=True
+    )
+    keys_by_cfe = sorted(means.keys(), key=lambda k: means[k][1], reverse=True)
+
+    results["sorted_by_carbon_intensity"] = keys_by_carbon_intensity
+    results["sorted_by_cfe"] = keys_by_cfe
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default="local")
     parser.add_argument("--q1", action="store_true")
+    parser.add_argument("--q2", action="store_true")
     parser.add_argument("--timed", action="store_true")
     parser.add_argument("--save-fs", dest="save_fs", action="store_true")
     parser.add_argument("--save-influx", dest="save_influx", action="store_true")
@@ -94,10 +135,10 @@ if __name__ == "__main__":
         INFLUX_HOST = "influxdb"
 
     t_q1 = {}
-    t = {"1": t_q1}
+    t_q2 = {}
 
     if args.q1:
-        results = {
+        results_q1 = {
             "counts": {},
             "means": {},
             "maxs": {},
@@ -106,8 +147,8 @@ if __name__ == "__main__":
 
         t_q1["query_start"] = time.perf_counter()
 
-        q1(ITALY_HOURLY_FILE, results)
-        q1(SWEDEN_HOURLY_FILE, results)
+        q1(ITALY_HOURLY_FILE, results_q1)
+        q1(SWEDEN_HOURLY_FILE, results_q1)
 
         t_q1["query_end"] = time.perf_counter()
 
@@ -119,8 +160,8 @@ if __name__ == "__main__":
             if args.mode == "local":
                 with open("../results/query_1/baseline/results.csv", "w") as file:
                     file.write(Q1_HEADER)
-                    for key in results["counts"].keys():
-                        file.write(q1_result_to_line(results, key))
+                    for key in results_q1["counts"].keys():
+                        file.write(q1_result_to_line(results_q1, key))
             elif args.mode == "composed":
                 client.makedirs("/results/query_1/baseline")
                 with client.write(
@@ -128,8 +169,76 @@ if __name__ == "__main__":
                 ) as file:
                     # Ensure content is written in bytes
                     file.write(Q1_HEADER.encode("utf-8"))
-                    for key in results["counts"].keys():
-                        file.write(q1_result_to_line(results, key).encode("utf-8"))
+                    for key in results_q1["counts"].keys():
+                        file.write(q1_result_to_line(results_q1, key).encode("utf-8"))
+
+    if args.q2:
+        results_q2 = {
+            "counts": {},
+            "means": {},
+            "sorted_by_carbon_intensity": [],
+            "sorted_by_cfe": [],
+        }
+
+        t_q2["query_start"] = time.perf_counter()
+
+        q2(ITALY_HOURLY_FILE, results_q2)
+
+        t_q2["query_end"] = time.perf_counter()
+
+        if args.timed:
+            t_q2["query_duration"] = round(t_q2["query_end"] - t_q2["query_start"], 3)
+            print(f"Query 2 took {t_q2['query_duration']} seconds")
+
+        if args.save_fs:
+            if args.mode == "local":
+                os.makedirs("../results/query_2/baseline", exist_ok=True)
+
+                with open(
+                    "../results/query_2/baseline/by_carbon_intensity-all.csv", "w"
+                ) as file:
+                    file.write(Q2_HEADER)
+                    for key in results_q2["sorted_by_carbon_intensity"]:
+                        file.write(q2_result_to_line(results_q2, key))
+
+                with open(
+                    "../results/query_2/baseline/by_carbon_intensity-top.csv", "w"
+                ) as file:
+                    file.write(Q2_HEADER)
+                    for key in results_q2["sorted_by_carbon_intensity"][:5]:
+                        file.write(q2_result_to_line(results_q2, key))
+
+                with open(
+                    "../results/query_2/baseline/by_carbon_intensity-bottom.csv", "w"
+                ) as file:
+                    file.write(Q2_HEADER)
+                    for key in results_q2["sorted_by_carbon_intensity"][-5:]:
+                        file.write(q2_result_to_line(results_q2, key))
+
+                with open("../results/query_2/baseline/by_cfe-all.csv", "w") as file:
+                    file.write(Q2_HEADER)
+                    for key in results_q2["sorted_by_cfe"]:
+                        file.write(q2_result_to_line(results_q2, key))
+
+                with open("../results/query_2/baseline/by_cfe-top.csv", "w") as file:
+                    file.write(Q2_HEADER)
+                    for key in results_q2["sorted_by_cfe"][:5]:
+                        file.write(q2_result_to_line(results_q2, key))
+
+                with open("../results/query_2/baseline/by_cfe-bottom.csv", "w") as file:
+                    file.write(Q2_HEADER)
+                    for key in results_q2["sorted_by_cfe"][-5:]:
+                        file.write(q2_result_to_line(results_q2, key))
+
+            elif args.mode == "composed":
+                client.makedirs("/results/query_1/baseline")
+                with client.write(
+                    "/results/query_1/baseline/results.csv", overwrite=True
+                ) as file:
+                    # Ensure content is written in bytes
+                    file.write(Q1_HEADER.encode("utf-8"))
+                    for key in results_q1["counts"].keys():
+                        file.write(q1_result_to_line(results_q1, key).encode("utf-8"))
 
     if args.timed and args.save_influx:
         bucket = "mybucket"
