@@ -14,6 +14,7 @@ from custom_formatter import (
 
 ITALY_HOURLY_FILE = "/dataset/combined/combined_dataset-italy_hourly.csv"
 SWEDEN_HOURLY_FILE = "/dataset/combined/combined_dataset-sweden_hourly.csv"
+Q1_HEADER = "date,country,carbon-mean,carbon-min,carbon-max,cfe-mean,cfe-min,cfe-max\n"
 
 
 def read_file(path, mode):
@@ -25,8 +26,6 @@ def read_file(path, mode):
 
 
 def hdfs_read(path):
-    # Connect to HDFS - replace with your Namenode URL and port
-    client = InsecureClient("http://master:9870", user="spark")
     with client.read(path, encoding="utf-8") as reader:
         yield from reader
 
@@ -34,6 +33,10 @@ def hdfs_read(path):
 def fs_read(path):
     with open(path, "r") as file:
         yield from file
+
+
+def q1_result_to_line(results, key):
+    return f"{key.split('_')[0]},{key.split('_')[1]},{results['means'][key][0]},{results['mins'][key][0]},{results['maxs'][key][0]},{results['means'][key][1]},{results['mins'][key][1]},{results['maxs'][key][1]}\n"
 
 
 def q1(path, results):
@@ -75,6 +78,10 @@ if __name__ == "__main__":
     parser.add_argument("--q1", action="store_true")
     args = parser.parse_args()
 
+    if args.mode == "composed":
+        # Connect to HDFS - replace with your Namenode URL and port
+        client = InsecureClient("http://master:9870", user="spark")
+
     if args.q1:
         results = {
             "counts": {},
@@ -86,12 +93,17 @@ if __name__ == "__main__":
         q1(ITALY_HOURLY_FILE, results)
         q1(SWEDEN_HOURLY_FILE, results)
 
-        with open("../results/query_1/baseline/results.csv", "w") as file:
-            file.write(
-                "date,country,carbon-mean,carbon-min,carbon-max,cfe-mean,cfe-min,cfe-max\n"
-            )
-
-            for key in results["counts"].keys():
-                file.write(
-                    f"{key.split('_')[0]},{key.split('_')[1]},{results['means'][key][0]},{results['mins'][key][0]},{results['maxs'][key][0]},{results['means'][key][1]},{results['mins'][key][1]},{results['maxs'][key][1]}\n"
-                )
+        if args.mode == "local":
+            with open("../results/query_1/baseline/results.csv", "w") as file:
+                file.write(Q1_HEADER)
+                for key in results["counts"].keys():
+                    file.write(q1_result_to_line(results, key))
+        elif args.mode == "composed":
+            client.makedirs("/results/query_1/baseline")
+            with client.write(
+                "/results/query_1/baseline/results.csv", overwrite=True
+            ) as file:
+                # Ensure content is written in bytes
+                file.write(Q1_HEADER.encode("utf-8"))
+                for key in results["counts"].keys():
+                    file.write(q1_result_to_line(results, key).encode("utf-8"))
