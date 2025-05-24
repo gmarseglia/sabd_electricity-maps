@@ -1,8 +1,12 @@
+from datetime import datetime, timezone
 from math import inf
 import time
 from hdfs import InsecureClient
 import argparse
 
+
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
 from tabulate import tabulate
 
 from custom_formatter import (
@@ -78,15 +82,20 @@ if __name__ == "__main__":
     parser.add_argument("--mode", type=str, default="local")
     parser.add_argument("--q1", action="store_true")
     parser.add_argument("--timed", action="store_true")
+    parser.add_argument("--save-influx", dest="save_influx", action="store_true")
     args = parser.parse_args()
 
+    if args.mode == "local":
+        INFLUX_HOST = "localhost"
     if args.mode == "composed":
         # Connect to HDFS - replace with your Namenode URL and port
         client = InsecureClient("http://master:9870", user="spark")
+        INFLUX_HOST = "influxdb"
+
+    t_q1 = {}
+    t = {"1": t_q1}
 
     if args.q1:
-        t_q1 = {}
-
         results = {
             "counts": {},
             "means": {},
@@ -105,8 +114,6 @@ if __name__ == "__main__":
             t_q1["query_duration"] = round(t_q1["query_end"] - t_q1["query_start"], 3)
             print(f"Query 1 took {t_q1['query_duration']} seconds")
 
-        t_q1["fs_start"] = time.perf_counter()
-
         if args.mode == "local":
             with open("../results/query_1/baseline/results.csv", "w") as file:
                 file.write(Q1_HEADER)
@@ -122,8 +129,19 @@ if __name__ == "__main__":
                 for key in results["counts"].keys():
                     file.write(q1_result_to_line(results, key).encode("utf-8"))
 
-        t_q1["fs_end"] = time.perf_counter()
+    if args.timed and args.save_influx:
+        bucket = "mybucket"
+        org = "myorg"
+        token = "mytoken"
+        url = f"http://{INFLUX_HOST}:8086"
+        client = InfluxDBClient(url=url, token=token, org=org)
+        write_api = client.write_api(write_options=SYNCHRONOUS)
 
-        if args.timed:
-            t_q1["fs_duration"] = round(t_q1["fs_end"] - t_q1["fs_start"], 3)
-            print(f"FS took {t_q1['fs_duration']} seconds")
+        point = (
+            Point("t_q1")
+            .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
+            .tag("mode", args.mode)
+            .tag("api", "baseline")
+            .field("query_duration", t_q1["query_duration"])
+        )
+        write_api.write(bucket=bucket, org=org, record=point)
