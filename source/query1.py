@@ -6,7 +6,13 @@ from tabulate import tabulate
 from custom_formatter import *
 
 
-def query1(spark: SparkSession, italy_file: str, sweden_file: str, api: str):
+def query1(
+    spark: SparkSession,
+    italy_file: str,
+    sweden_file: str,
+    api: str,
+    use_cache: bool = True,
+):
     if api == "default" or api == "rdd":
         return query_1_rdd(spark, italy_file, sweden_file)
 
@@ -14,7 +20,9 @@ def query1(spark: SparkSession, italy_file: str, sweden_file: str, api: str):
         return query_1_df(spark, italy_file, sweden_file)
 
 
-def query_1_rdd(spark: SparkSession, italy_file: str, sweden_file: str):
+def query_1_rdd(
+    spark: SparkSession, italy_file: str, sweden_file: str, use_cache: bool = True
+):
     if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
         sc = spark.sparkContext
         italy_rdd = sc.textFile(italy_file)
@@ -34,7 +42,9 @@ def query_1_rdd(spark: SparkSession, italy_file: str, sweden_file: str):
     )
 
     # Query 1.1: Average "CO2 Intensity" and "CO2 Free" by year ad by country
-    query_1_base = queries_base.map(lambda x: ((x[0][0], x[0][1]), x[1])).cache()
+    query_1_base = queries_base.map(lambda x: ((x[0][0], x[0][1]), x[1]))
+    if use_cache:
+        query_1_base = query_1_base.cache()
 
     avg_by_country = query_1_base.reduceByKey(
         lambda x, y: (x[0] + y[0], x[1] + y[1], x[2] + y[2])
@@ -74,7 +84,9 @@ def query_1_rdd(spark: SparkSession, italy_file: str, sweden_file: str):
     return query_1
 
 
-def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
+def query_1_df(
+    spark: SparkSession, italy_file: str, sweden_file: str, use_cache: bool = True
+):
     # Read data
     if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
         italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
@@ -92,11 +104,11 @@ def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
     # Format data
     df = italy_df.union(sweden_df)
 
-    df = (
-        df.withColumn("Year", split(col("Datetime"), "-").getItem(0))
-        .select(*COLUMN_NAMES_DF_1)
-        .cache()
+    df = df.withColumn("Year", split(col("Datetime"), "-").getItem(0)).select(
+        *COLUMN_NAMES_DF_1
     )
+    if use_cache:
+        df = df.cache()
 
     df = df.groupBy("Country", "Year").agg(
         F.avg("CO2_intensity_direct").alias(QUERY_1_COLUMNS[2]),

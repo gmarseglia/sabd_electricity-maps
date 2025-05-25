@@ -24,6 +24,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--timed", action="store_true")
     arg_parser.add_argument("--debug", action="store_true")
     arg_parser.add_argument("--format", type=str, default="csv")
+    arg_parser.add_argument("--no-cache", dest="no_cache", action="store_true")
     args = arg_parser.parse_args()
 
     if args.mode == "local":
@@ -35,12 +36,16 @@ if __name__ == "__main__":
 
     if not args.q1 and not args.q2:
         raise Exception("At least one query must be selected")
-    
+
     if not args.format == "csv" and not args.format == "parquet":
         raise Exception("At least one format must be selected")
-    
-    ITALY_HOURLY_FILE = f"{PREFIX}/dataset/combined/combined_dataset-italy_hourly.{args.format}"
-    SWEDEN_HOURLY_FILE = f"{PREFIX}/dataset/combined/combined_dataset-sweden_hourly.{args.format}"
+
+    ITALY_HOURLY_FILE = (
+        f"{PREFIX}/dataset/combined/combined_dataset-italy_hourly.{args.format}"
+    )
+    SWEDEN_HOURLY_FILE = (
+        f"{PREFIX}/dataset/combined/combined_dataset-sweden_hourly.{args.format}"
+    )
 
     t_q1 = {}
     t_q2 = {}
@@ -77,6 +82,7 @@ if __name__ == "__main__":
             italy_file=ITALY_HOURLY_FILE,
             sweden_file=SWEDEN_HOURLY_FILE,
             api=args.api,
+            use_cache=not args.no_cache,
         )
 
         if args.timed:
@@ -146,6 +152,7 @@ if __name__ == "__main__":
                 .tag("mode", args.mode)
                 .tag("api", args.api)
                 .tag("format", args.format)
+                .tag("cache", not args.no_cache)
             )
             point.field("query_duration", t_q1["query_duration"])
             if args.save_fs:
@@ -167,7 +174,7 @@ if __name__ == "__main__":
             result2["by_cfe"],
             result2["by_cfe_top"],
             result2["by_cfe_bottom"],
-        ) = query2(spark, ITALY_HOURLY_FILE, args.api)
+        ) = query2(spark, ITALY_HOURLY_FILE, args.api, use_cache=not args.no_cache)
 
         if args.timed:
             for result in result2.values():
@@ -233,6 +240,7 @@ if __name__ == "__main__":
                 .tag("mode", args.mode)
                 .tag("api", args.api)
                 .tag("format", args.format)
+                .tag("cache", not args.no_cache)
             )
             point.field("query_duration", t_q2["query_duration"])
             if args.save_fs:
