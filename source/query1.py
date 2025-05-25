@@ -8,15 +8,21 @@ from custom_formatter import *
 
 def query1(spark: SparkSession, italy_file: str, sweden_file: str, api: str):
     if api == "default" or api == "rdd":
-        return query_1_rdd(spark.sparkContext, italy_file, sweden_file)
+        return query_1_rdd(spark, italy_file, sweden_file)
 
     if api == "df":
         return query_1_df(spark, italy_file, sweden_file)
 
 
-def query_1_rdd(sc: SparkContext, italy_file: str, sweden_file: str):
-    italy_rdd = sc.textFile(italy_file)
-    sweden_rdd = sc.textFile(sweden_file)
+def query_1_rdd(spark: SparkSession, italy_file: str, sweden_file: str):
+    if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
+        sc = spark.sparkContext
+        italy_rdd = sc.textFile(italy_file)
+        sweden_rdd = sc.textFile(sweden_file)
+    else:
+        raise Exception(
+            f"Invalid file format for RDD API implementation: {italy_file} and {sweden_file}"
+        )
 
     hourly_rdd = italy_rdd.union(sweden_rdd)
 
@@ -70,15 +76,21 @@ def query_1_rdd(sc: SparkContext, italy_file: str, sweden_file: str):
 
 def query_1_df(spark: SparkSession, italy_file: str, sweden_file: str):
     # Read data
-    df_it = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
-        *COLUMN_NAMES_RAW
-    )
-    df_se = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
-        *COLUMN_NAMES_RAW
-    )
+    if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
+        italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+        sweden_df = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+    elif italy_file.endswith(".parquet") and sweden_file.endswith(".parquet"):
+        italy_df = spark.read.parquet(italy_file)
+        sweden_df = spark.read.parquet(sweden_file)
+    else:
+        raise Exception("Invalid file format: {italy_file} and {sweden_file}")
 
     # Format data
-    df = df_it.union(df_se)
+    df = italy_df.union(sweden_df)
 
     df = (
         df.withColumn("Year", split(col("Datetime"), "-").getItem(0))

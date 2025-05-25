@@ -23,6 +23,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--save-influx", dest="save_influx", action="store_true")
     arg_parser.add_argument("--timed", action="store_true")
     arg_parser.add_argument("--debug", action="store_true")
+    arg_parser.add_argument("--format", type=str, default="csv")
     args = arg_parser.parse_args()
 
     if args.mode == "local":
@@ -32,11 +33,14 @@ if __name__ == "__main__":
         PREFIX = "hdfs://master:54310"
         INFLUX_HOST = "influxdb"
 
-    ITALY_HOURLY_FILE = f"{PREFIX}/dataset/combined/combined_dataset-italy_hourly.csv"
-    SWEDEN_HOURLY_FILE = f"{PREFIX}/dataset/combined/combined_dataset-sweden_hourly.csv"
-
     if not args.q1 and not args.q2:
         raise Exception("At least one query must be selected")
+    
+    if not args.format == "csv" and not args.format == "parquet":
+        raise Exception("At least one format must be selected")
+    
+    ITALY_HOURLY_FILE = f"{PREFIX}/dataset/combined/combined_dataset-italy_hourly.{args.format}"
+    SWEDEN_HOURLY_FILE = f"{PREFIX}/dataset/combined/combined_dataset-sweden_hourly.{args.format}"
 
     t_q1 = {}
     t_q2 = {}
@@ -98,7 +102,7 @@ if __name__ == "__main__":
                 result1 = result1.toDF(QUERY_1_COLUMNS)
 
             result1.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_1/{args.api}", header=True
+                f"{PREFIX}/results/query_1/{args.api}-{args.format}", header=True
             )
 
             if args.timed:
@@ -141,6 +145,7 @@ if __name__ == "__main__":
                 .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
                 .tag("mode", args.mode)
                 .tag("api", args.api)
+                .tag("format", args.format)
             )
             point.field("query_duration", t_q1["query_duration"])
             if args.save_fs:
@@ -192,7 +197,7 @@ if __name__ == "__main__":
 
             for key in result2.keys():
                 result2[key].coalesce(1).write.mode("overwrite").csv(
-                    f"{PREFIX}/results/query_2/{args.api}/{key}",
+                    f"{PREFIX}/results/query_2/{args.api}-{args.format}/{key}",
                     header=True,
                 )
 
@@ -227,6 +232,7 @@ if __name__ == "__main__":
                 .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
                 .tag("mode", args.mode)
                 .tag("api", args.api)
+                .tag("format", args.format)
             )
             point.field("query_duration", t_q2["query_duration"])
             if args.save_fs:

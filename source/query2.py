@@ -9,16 +9,21 @@ from custom_formatter import *
 
 def query2(spark: SparkSession, italy_file: str, api: str):
     if api == "rdd":
-        return query2_rdd(spark.sparkContext, italy_file)
+        return query2_rdd(spark, italy_file)
     if api == "df":
         return query2_df(spark, italy_file)
     raise Exception("API not supported")
 
 
 def query2_df(spark: SparkSession, italy_file: str):
-    df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
-        *COLUMN_NAMES_RAW
-    )
+    if italy_file.endswith(".csv"):
+        df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+    elif italy_file.endswith(".parquet"):
+        df = spark.read.parquet(italy_file)
+    else:
+        raise Exception("Invalid file format for DF API implementation: {italy_file}")
 
     df = (
         df.withColumn("Year", F.split(F.col("Datetime"), "-").getItem(0))
@@ -57,9 +62,12 @@ def query2_df(spark: SparkSession, italy_file: str):
     )
 
 
-def query2_rdd(sc: SparkContext, italy_file: str):
-
-    italy_rdd = sc.textFile(italy_file)
+def query2_rdd(spark: SparkSession, italy_file: str):
+    if italy_file.endswith(".csv"):
+        sc = spark.sparkContext
+        italy_rdd = sc.textFile(italy_file)
+    else:
+        raise Exception(f"Invalid file format for RDD API implementation: {italy_file}")
 
     base = italy_rdd.map(
         lambda x: (
