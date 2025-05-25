@@ -1,7 +1,9 @@
-regions = [
-    "IT-CNO", "IT-CSO", "IT-NO", "IT-SAR", "IT-SIC", "IT-SO",
-    "SE-SE1", "SE-SE2", "SE-SE3", "SE-SE4"
-]
+# regions = [
+#     "IT-CNO", "IT-CSO", "IT-NO", "IT-SAR", "IT-SIC", "IT-SO",
+#     "SE-SE1", "SE-SE2", "SE-SE3", "SE-SE4"
+# ]
+
+regions = ["IT", "SE"]
 
 years = ["2021", "2022", "2023", "2024"]
 
@@ -16,4 +18,3 @@ print(combinations)
 with open("datasets_url.txt", "w") as file:
     for combination in combinations:
         file.write(f"{combination}\n")
-

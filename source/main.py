@@ -176,20 +176,20 @@ if __name__ == "__main__":
             if args.timed:
                 t_q2["fs_start"] = time.perf_counter()
 
-            if args.api == "default" or args.api == "rdd":
+            if args.api == "rdd":
                 output_21 = result_21.toDF(QUERY_2_COLUMNS)
                 output_22 = result_22.toDF(QUERY_2_COLUMNS)
-            elif args.api == "df":
+            elif args.api == "default" or args.api == "df":
                 output_21 = result_21
                 output_22 = result_22
 
             output_21.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_direct-all", header=True
+                f"{PREFIX}/results/query_2/{args.api}/by_carbon_intensity-all", header=True
             )
 
             top_21 = spark.createDataFrame(output_21.head(5), schema=output_21.schema)
             top_21.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_direct-top-{args.api}",
+                f"{PREFIX}/results/query_2/{args.api}/by_carbon_intensity-top",
                 header=True,
             )
 
@@ -197,23 +197,23 @@ if __name__ == "__main__":
                 output_21.tail(5), schema=output_21.schema
             )
             bottom_21.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_direct-bottom", header=True
+                f"{PREFIX}/results/query_2/{args.api}/by_carbon_intensity-bottom", header=True
             )
 
             output_22.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_free-all", header=True
+                f"{PREFIX}/results/query_2/{args.api}/by_cfe-all", header=True
             )
 
             top_22 = spark.createDataFrame(output_22.head(5), schema=output_22.schema)
             top_22.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_free-top", header=True
+                f"{PREFIX}/results/query_2/{args.api}/by_cfe-top", header=True
             )
 
             bottom_22 = spark.createDataFrame(
                 output_22.tail(5), schema=output_22.schema
             )
             bottom_22.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_free-bottom", header=True
+                f"{PREFIX}/results/query_2/{args.api}/by_cfe-bottom", header=True
             )
 
             if args.timed:
