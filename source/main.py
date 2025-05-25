@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--mode", type=str, default="local")
-    arg_parser.add_argument("--api", type=str, default="default")
+    arg_parser.add_argument("--api", type=str, default="rdd")
     arg_parser.add_argument("--q1", action="store_true")
     arg_parser.add_argument("--q2", action="store_true")
     arg_parser.add_argument("--collect", action="store_true")
@@ -38,9 +38,8 @@ if __name__ == "__main__":
     if not args.q1 and not args.q2:
         raise Exception("At least one query must be selected")
 
-    if args.timed:
-        t_q1 = {}
-        t_q2 = {}
+    t_q1 = {}
+    t_q2 = {}
 
     """
     Spark setup
@@ -67,6 +66,8 @@ if __name__ == "__main__":
         """
         Build query
         """
+        t_q1["query_start"] = time.perf_counter()
+
         result1 = query1(
             spark,
             italy_file=ITALY_HOURLY_FILE,
@@ -75,7 +76,6 @@ if __name__ == "__main__":
         )
 
         if args.timed:
-            t_q1["query_start"] = time.perf_counter()
             result1.collect()
             t_q1["query_end"] = time.perf_counter()
             t_q1["query_duration"] = round(t_q1["query_end"] - t_q1["query_start"], 3)
@@ -95,18 +95,16 @@ if __name__ == "__main__":
                 t_q1["fs_start"] = time.perf_counter()
 
             if args.api == "default" or args.api == "rdd":
-                output = result1.toDF(QUERY_1_COLUMNS)
-            elif args.api == "df":
-                output = result1
+                result1 = result1.toDF(QUERY_1_COLUMNS)
 
-            output.toDF(*QUERY_1_COLUMNS).coalesce(1).write.mode("overwrite").csv(
+            result1.coalesce(1).write.mode("overwrite").csv(
                 f"{PREFIX}/results/query_1/{args.api}", header=True
             )
 
             if args.timed:
                 t_q1["fs_end"] = time.perf_counter()
                 t_q1["fs_duration"] = round(t_q1["fs_end"] - t_q1["fs_start"], 3)
-                print(f"HDFS took {t_q1['fs_duration']} seconds")
+                print(f"FS took {t_q1['fs_duration']} seconds")
 
         """
         Save results to InfluxDB
@@ -154,78 +152,60 @@ if __name__ == "__main__":
     Query 2
     """
     if args.q2:
-        result_21, result_22 = query2(spark, ITALY_HOURLY_FILE, args.api)
+        t_q2["query_start"] = time.perf_counter()
+
+        result2 = {}
+        (
+            result2["by_carbon_intensity"],
+            result2["by_carbon_intensity_top"],
+            result2["by_carbon_intensity_bottom"],
+            result2["by_cfe"],
+            result2["by_cfe_top"],
+            result2["by_cfe_bottom"],
+        ) = query2(spark, ITALY_HOURLY_FILE, args.api)
 
         if args.timed:
-            t_q2["query_start"] = time.perf_counter()
-            result_21.collect()
-            result_22.collect()
+            for result in result2.values():
+                result.collect()
             t_q2["query_end"] = time.perf_counter()
             t_q2["query_duration"] = round(t_q2["query_end"] - t_q2["query_start"], 3)
             print(f"Query 2 took {t_q2['query_duration']} seconds")
 
         if args.collect:
-            print(
-                tabulate(result_21.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
-            )
-            print(
-                tabulate(result_22.collect(), headers=QUERY_2_COLUMNS, tablefmt="grid")
-            )
+            for key in result2.keys():
+                print(f"Results for {key}")
+                print(
+                    tabulate(
+                        result2[key].collect(),
+                        headers=QUERY_2_COLUMNS,
+                        tablefmt="grid",
+                    )
+                )
 
         if args.save_fs:
             if args.timed:
                 t_q2["fs_start"] = time.perf_counter()
 
             if args.api == "rdd":
-                output_21 = result_21.toDF(QUERY_2_COLUMNS)
-                output_22 = result_22.toDF(QUERY_2_COLUMNS)
-            elif args.api == "default" or args.api == "df":
-                output_21 = result_21
-                output_22 = result_22
+                for key in result2.keys():
+                    result2[key] = result2[key].toDF(QUERY_2_COLUMNS)
 
-            output_21.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_carbon_intensity-all", header=True
-            )
-
-            top_21 = spark.createDataFrame(output_21.head(5), schema=output_21.schema)
-            top_21.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_carbon_intensity-top",
-                header=True,
-            )
-
-            bottom_21 = spark.createDataFrame(
-                output_21.tail(5), schema=output_21.schema
-            )
-            bottom_21.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_carbon_intensity-bottom", header=True
-            )
-
-            output_22.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_cfe-all", header=True
-            )
-
-            top_22 = spark.createDataFrame(output_22.head(5), schema=output_22.schema)
-            top_22.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_cfe-top", header=True
-            )
-
-            bottom_22 = spark.createDataFrame(
-                output_22.tail(5), schema=output_22.schema
-            )
-            bottom_22.coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}/by_cfe-bottom", header=True
-            )
+            for key in result2.keys():
+                result2[key].coalesce(1).write.mode("overwrite").csv(
+                    f"{PREFIX}/results/query_2/{args.api}/{key}",
+                    header=True,
+                )
 
             if args.timed:
                 t_q2["fs_end"] = time.perf_counter()
                 t_q2["fs_duration"] = round(t_q2["fs_end"] - t_q2["fs_start"], 3)
-                print(f"HDFS took {t_q2['fs_duration']} seconds")
+                print(f"FS took {t_q2['fs_duration']} seconds")
 
         if args.save_influx:
             if args.timed:
                 t_q2["influx_start"] = time.perf_counter()
 
-            for row in result_21.collect():
+            for row in result2["by_carbon_intensity"].collect():
                 point = (
                     Point("query_2")
                     .field(QUERY_2_COLUMNS[1], row[1])
