@@ -170,10 +170,10 @@ def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
         """
         SELECT
             YEAR(Datetime) AS year, Country AS country,
-            AVG(Carbon_free_energy_percent) AS `cfe-avg`,  MIN(Carbon_free_energy_percent) AS `cfe-min`, MAX(Carbon_free_energy_percent) AS `cfe-max`,
-            AVG(CO2_intensity_direct) AS `carbon-avg`, MIN(CO2_intensity_direct) AS `carbon-min`, MAX(CO2_intensity_direct) AS `carbon-max`
+            AVG(CO2_intensity_direct) AS `carbon-mean`, MIN(CO2_intensity_direct) AS `carbon-min`, MAX(CO2_intensity_direct) AS `carbon-max`
+            AVG(Carbon_free_energy_percent) AS `cfe-mean`,  MIN(Carbon_free_energy_percent) AS `cfe-min`, MAX(Carbon_free_energy_percent) AS `cfe-max`,
         FROM carbon_data
-        GROUP BY year, country
+        GROUP BY country, year
         ORDER BY country, year
         """
     )
