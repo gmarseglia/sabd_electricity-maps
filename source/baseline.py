@@ -263,19 +263,20 @@ if __name__ == "__main__":
                         file, q2_result_to_line(results_q2, key), args.mode
                     )
 
-    if args.timed and args.save_influx:
-        bucket = "mybucket"
-        org = "myorg"
-        token = "mytoken"
-        url = f"http://{INFLUX_HOST}:8086"
-        client = InfluxDBClient(url=url, token=token, org=org)
-        write_api = client.write_api(write_options=SYNCHRONOUS)
+        if args.timed and args.save_influx:
+            bucket = "mybucket"
+            org = "myorg"
+            token = "mytoken"
+            url = f"http://{INFLUX_HOST}:8086"
+            client = InfluxDBClient(url=url, token=token, org=org)
+            write_api = client.write_api(write_options=SYNCHRONOUS)
 
-        point = (
-            Point("t_q2")
-            .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
-            .tag("mode", args.mode)
-            .tag("api", "baseline")
-            .field("query_duration", t_q2["query_duration"])
-        )
-        write_api.write(bucket=bucket, org=org, record=point)
+            point = (
+                Point("t_q2")
+                .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
+                .tag("mode", args.mode)
+                .tag("api", "baseline")
+                .field("query_duration", t_q2['query_duration'])
+            )
+            write_api.write(bucket=bucket, org=org, record=point)
+    
