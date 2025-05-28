@@ -2,7 +2,43 @@ import docker
 import os
 import zipfile
 import time
+from itertools import product
 
+
+def create_cmd(
+    query,
+    api,
+    format,
+    mode="composed",
+):
+    if api == "baseline":
+        return (
+            "python3"
+            " source/baseline.py"
+            f" --mode {mode}"
+            " --save-fs"
+            " --save-influx"
+            " --timed"
+            f" --q{query}"
+        )
+    else:
+        return (
+            "/opt/spark/bin/spark-submit"
+            " --master spark://spark-master:7077"
+            " --deploy-mode client"
+            " --py-files source/source.zip"
+            " source/main.py"
+            f" --mode {mode}"
+            " --save-fs"
+            " --save-influx"
+            " --timed"
+            f" --q{query}"
+            f" --api {api}"
+            f" --format {format}"
+        )
+
+
+EXPERIMENT_1 = product(["1", "2"], ["baseline", "rdd", "df", "sql"], ["csv"])
 
 SOURCE_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/source"
 RESULTS_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/results/experiments"
@@ -42,8 +78,11 @@ cmd = (
 
 short_cmd = cmd[176:].replace(" ", "_")
 print(f"Running command: {short_cmd}")
+
 start = time.perf_counter()
+
 exec_result = spark_client.exec_run(cmd)
+
 end = time.perf_counter()
 print(f"Execution took {round(end - start, 3)} seconds")
 
