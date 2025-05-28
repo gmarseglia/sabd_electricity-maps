@@ -119,7 +119,7 @@ if __name__ == "__main__":
         """
         Save results to InfluxDB
         """
-        if args.save_influx:
+        if args.save_fs and args.save_influx:
             if args.timed:
                 t_q1["influx_start"] = time.perf_counter()
             for row in result1.collect():
@@ -213,7 +213,7 @@ if __name__ == "__main__":
                 t_q2["fs_duration"] = round(t_q2["fs_end"] - t_q2["fs_start"], 3)
                 print(f"FS took {t_q2['fs_duration']} seconds")
 
-        if args.save_influx:
+        if args.save_fs and args.save_influx:
             if args.timed:
                 t_q2["influx_start"] = time.perf_counter()
 
