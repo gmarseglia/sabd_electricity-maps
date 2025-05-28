@@ -3,3 +3,4 @@ results/
 .idea/*
 .requirements.txt
 source/__pycache__/
+source/source.zip

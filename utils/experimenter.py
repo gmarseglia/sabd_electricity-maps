@@ -8,25 +8,29 @@ SOURCE_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/source"
 RESULTS_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/results/experiments"
 
 RUNS_FOR_EXPERIMENT = 5
-EXPERIMENT_1 = list(product(["1", "2"], ["rdd", "df", "sql", "baseline"], ["csv"]))
+EXPERIMENT_1 = list(
+    product(["1", "2"], ["rdd", "df", "sql", "baseline"], ["csv"], [True])
+)
+EXPERIMENT_2 = list(product(["1", "2"], ["df", "sql"], ["parquet"], [True]))
+EXPERIMENT_3 = list(product(["1", "2"], ["rdd", "df"], ["csv"], [False]))
+EXPERIMENTS = EXPERIMENT_1 + EXPERIMENT_2 + EXPERIMENT_3
 
 
 def create_cmd(
     query,
     api,
     format,
+    cache,
     mode="composed",
 ):
+    str_cache = " --no-cache" if not cache else ""
+    short_str_cache = "-no-cache" if not cache else ""
     if api == "baseline":
         return (
-            "python3"
-            " source/baseline.py"
-            f" --mode {mode}"
-            " --save-fs"
-            " --save-influx"
-            " --timed"
-            f" --q{query}",
-            f"q{query}-baseline-csv",
+            "python3" " source/baseline.py" f" --mode {mode}"
+            # " --save-fs"
+            " --save-influx" " --timed" f" --q{query}" f"{str_cache}",
+            f"q{query}-baseline-csv{short_str_cache}",
         )
     else:
         return (
@@ -41,26 +45,30 @@ def create_cmd(
             " --timed"
             f" --q{query}"
             f" --api {api}"
-            f" --format {format}",
-            f"q{query}-{api}-{format}",
+            f" --format {format}"
+            f"{str_cache}",
+            f"q{query}-{api}-{format}{short_str_cache}",
         )
 
 
-def execute_cmd(cmd, short_cmd, container, write_result=False, delete_zip=False):
+def execute_cmd(
+    cmd, short_cmd, container, write_result=False, recreate_zip=False, delete_zip=False
+):
     zip_path = os.path.join(SOURCE_DIR, "source.zip")
     # Change to the source directory
     os.chdir(SOURCE_DIR)
 
     # Remove existing ZIP file if it exists
-    if os.path.exists(zip_path):
+    if recreate_zip and os.path.exists(zip_path):
         os.remove(zip_path)
 
     # Create a new ZIP file with all contents of the directory
-    with zipfile.ZipFile("source.zip", "w", zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk("."):
-            for file in files:
-                filepath = os.path.join(root, file)
-                zipf.write(filepath, arcname=filepath)
+    if not os.path.exists(zip_path):
+        with zipfile.ZipFile("source.zip", "w", zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk("."):
+                for file in files:
+                    filepath = os.path.join(root, file)
+                    zipf.write(filepath, arcname=filepath)
 
     print(f"Running command: {cmd}")
 
@@ -70,7 +78,7 @@ def execute_cmd(cmd, short_cmd, container, write_result=False, delete_zip=False)
 
     end = time.perf_counter()
     duration = round(end - start, 3)
-    print(f"Execution took {pretty_duration(duration)} seconds")
+    print(f"Execution took {pretty_duration(duration)}")
 
     if write_result:
         # Create the results directory
@@ -100,24 +108,30 @@ def pretty_duration(seconds):
 
 if __name__ == "__main__":
     docker_client = docker.from_env()
-    spark_client = docker_client.containers.get("spark-client")
+    spark_client_container = docker_client.containers.get("spark-client")
 
-    total_runs = RUNS_FOR_EXPERIMENT * len(EXPERIMENT_1)
+    total_runs = RUNS_FOR_EXPERIMENT * len(EXPERIMENTS)
     start = time.perf_counter()
 
     completed_runs = 0
     for n in range(RUNS_FOR_EXPERIMENT):
         e = 0
-        for experiment in EXPERIMENT_1:
+        for experiment in EXPERIMENTS:
             e += 1
             cmd, short_cmd = create_cmd(*experiment)
+            short_cmd = f"{short_cmd}_{n}"
 
             print(
-                f"Experiment {short_cmd}::{n}-{e}/{RUNS_FOR_EXPERIMENT}-{len(EXPERIMENT_1)}"
+                f"Experiment {short_cmd}::{n}-{e}/{RUNS_FOR_EXPERIMENT}-{len(EXPERIMENTS)}"
             )
 
             duration = execute_cmd(
-                cmd, short_cmd, spark_client, write_result=True, delete_zip=False
+                cmd,
+                short_cmd,
+                spark_client_container,
+                write_result=True,
+                recreate_zip=False,
+                delete_zip=False,
             )
 
             completed_runs += 1
@@ -131,4 +145,4 @@ if __name__ == "__main__":
             print(
                 f"Remaining: {total_runs - completed_runs}/{total_runs} in {pretty_duration(eta)}"
             )
-            print("-" * 50)
+            print("-" * 80)
