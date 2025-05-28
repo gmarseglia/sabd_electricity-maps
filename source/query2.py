@@ -9,9 +9,9 @@ from custom_formatter import *
 
 def query2(spark: SparkSession, italy_file: str, api: str, use_cache: bool = True):
     if api == "rdd":
-        return query2_rdd(spark, italy_file)
+        return query2_rdd(spark, italy_file, use_cache)
     if api == "df":
-        return query2_df(spark, italy_file)
+        return query2_df(spark, italy_file, use_cache)
     raise Exception("API not supported")
 
 
