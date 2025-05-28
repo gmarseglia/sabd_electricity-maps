@@ -8,12 +8,12 @@ SOURCE_DIR="/home/giuseppe/SABD/sabd_electricity-maps/source"
 docker exec -t spark-client /opt/spark/bin/spark-submit \
     --master spark://spark-master:7077 \
     --py-files source/source.zip \
-    source/main.py --mode composed --q1 --save-fs --save-influx --timed --api df --format csv
+    source/main.py --mode composed --q1 --save-fs --save-influx --timed --api sql --format csv
 
 docker exec -t spark-client /opt/spark/bin/spark-submit \
     --master spark://spark-master:7077 \
     --py-files source/source.zip \
-    source/main.py --mode composed --q1 --save-fs --save-influx --timed --api df --format csv --no-cache
+    source/main.py --mode composed --q1 --save-fs --save-influx --timed --api sql --format parquet
 
 # Remove the source code
 (cd ${SOURCE_DIR} && rm -f source.zip)

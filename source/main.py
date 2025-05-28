@@ -132,7 +132,7 @@ if __name__ == "__main__":
                     .field(QUERY_1_COLUMNS[5], row[5])
                     .field(QUERY_1_COLUMNS[6], row[6])
                     .field(QUERY_1_COLUMNS[7], row[7])
-                    .time(datetime.strptime(row[0], "%Y"))
+                    .time(datetime.strptime((str(row[0])), "%Y"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
             if args.timed:
@@ -222,7 +222,7 @@ if __name__ == "__main__":
                     Point("query_2")
                     .field(QUERY_2_COLUMNS[1], row[1])
                     .field(QUERY_2_COLUMNS[2], row[2])
-                    .time(datetime.strptime(row[0], "%Y_%m"))
+                    .time(datetime.strptime(str(row[0]), "%Y_%m"))
                 )
                 write_api.write(bucket=bucket, org=org, record=point)
 

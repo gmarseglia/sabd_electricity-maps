@@ -14,10 +14,15 @@ def query1(
     use_cache: bool = True,
 ):
     if api == "default" or api == "rdd":
-        return query_1_rdd(spark, italy_file, sweden_file)
+        return query_1_rdd(spark, italy_file, sweden_file, use_cache)
 
     if api == "df":
-        return query_1_df(spark, italy_file, sweden_file)
+        return query_1_df(spark, italy_file, sweden_file, use_cache)
+
+    if api == "sql":
+        return query_1_sql(spark, italy_file, sweden_file)
+
+    raise Exception("API not supported")
 
 
 def query_1_rdd(
@@ -127,3 +132,50 @@ def query_1_df(
     )
 
     return df
+
+
+# COLUMN_NAMES_RAW = [
+#     "Datetime",
+#     "Country",
+#     "Zone_name",
+#     "Zone_id",
+#     "CO2_intensity_direct",
+#     "CO2_intensity_lifecycle",
+#     "Carbon_free_energy_percent",
+#     "Renewable_energy_percent",
+#     "Data_source",
+#     "Data_estimated",
+#     "Data_estimation_method",
+# ]
+
+
+def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
+    # Read data
+    if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
+        italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+        sweden_df = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+    elif italy_file.endswith(".parquet") and sweden_file.endswith(".parquet"):
+        italy_df = spark.read.parquet(italy_file)
+        sweden_df = spark.read.parquet(sweden_file)
+    else:
+        raise Exception("Invalid file format: {italy_file} and {sweden_file}")
+
+    italy_df.union(sweden_df).createOrReplaceTempView("carbon_data")
+
+    result = spark.sql(
+        """
+        SELECT
+            YEAR(Datetime) AS year, Country AS country,
+            AVG(Carbon_free_energy_percent) AS `cfe-avg`,  MIN(Carbon_free_energy_percent) AS `cfe-min`, MAX(Carbon_free_energy_percent) AS `cfe-max`,
+            AVG(CO2_intensity_direct) AS `carbon-avg`, MIN(CO2_intensity_direct) AS `carbon-min`, MAX(CO2_intensity_direct) AS `carbon-max`
+        FROM carbon_data
+        GROUP BY year, country
+        ORDER BY country, year
+        """
+    )
+
+    return result
