@@ -12,6 +12,8 @@ def query2(spark: SparkSession, italy_file: str, api: str, use_cache: bool = Tru
         return query2_rdd(spark, italy_file, use_cache)
     if api == "df":
         return query2_df(spark, italy_file, use_cache)
+    if api == "sql":
+        return query2_sql(spark, italy_file)
     raise Exception("API not supported")
 
 
@@ -125,4 +127,97 @@ def query2_rdd(spark: SparkSession, italy_file: str, use_cache: bool = True):
         rdd_by_cfe,
         rdd_by_cfe_top,
         rdd_by_cfe_bottom,
+    )
+
+
+def query2_sql(spark: SparkSession, italy_file: str):
+    # Read data
+    if italy_file.endswith(".csv"):
+        italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+    elif italy_file.endswith(".parquet"):
+        italy_df = spark.read.parquet(italy_file)
+    else:
+        raise Exception("Invalid file format: {italy_file} and {sweden_file}")
+
+    italy_df.createOrReplaceTempView("carbon_data")
+
+    spark.sql(
+        """
+        CREATE OR REPLACE TEMPORARY VIEW base AS
+        SELECT
+            date_format(Datetime, "yyyy_MM") AS date,
+            AVG(CO2_intensity_direct) AS `carbon-intensity`, AVG(Carbon_free_energy_percent) AS cfe
+        FROM carbon_data
+        GROUP BY date
+        ORDER BY date
+        """
+    )
+
+    by_carbon_intensity = spark.sql(
+        """
+        SELECT
+            date, `carbon-intensity`, cfe
+        FROM base
+        ORDER BY `carbon-intensity` DESC
+        """
+    )
+
+    by_carbon_intensity_top = spark.sql(
+        """
+        SELECT
+            date, `carbon-intensity`, cfe
+        FROM base
+        ORDER BY `carbon-intensity` DESC
+        LIMIT 5
+        """
+    )
+
+    by_carbon_intensity_bottom = spark.sql(
+        """
+        SELECT
+            date, `carbon-intensity`, cfe
+        FROM base
+        ORDER BY `carbon-intensity` ASC
+        LIMIT 5
+        """
+    )
+
+    by_cfe = spark.sql(
+        """
+        SELECT
+            date, `carbon-intensity`, cfe
+        FROM base
+        ORDER BY cfe DESC
+        """
+    )
+
+    by_cfe_top = spark.sql(
+        """
+        SELECT
+            date, `carbon-intensity`, cfe
+        FROM base
+        ORDER BY cfe DESC
+        LIMIT 5
+        """
+    )
+
+    by_cfe_bottom = spark.sql(
+        """
+        SELECT
+            date, `carbon-intensity`, cfe
+        FROM base
+        ORDER BY cfe ASC
+        LIMIT 5
+        """
+    )
+
+    return (
+        by_carbon_intensity,
+        by_carbon_intensity_top,
+        by_carbon_intensity_bottom,
+        by_cfe,
+        by_cfe_top,
+        by_cfe_bottom,
     )
