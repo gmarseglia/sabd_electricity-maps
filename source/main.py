@@ -157,7 +157,7 @@ if __name__ == "__main__":
             point.field("query_duration", t_q1["query_duration"])
             if args.save_fs:
                 point.field("fs_duration", t_q1["fs_duration"])
-            point.field("influx_duration", t_q1["influx_duration"])
+                point.field("influx_duration", t_q1["influx_duration"])
             write_api.write(bucket=bucket, org=org, record=point)
 
     """
@@ -245,7 +245,7 @@ if __name__ == "__main__":
             point.field("query_duration", t_q2["query_duration"])
             if args.save_fs:
                 point.field("fs_duration", t_q2["fs_duration"])
-            point.field("influx_duration", t_q2["influx_duration"])
+                point.field("influx_duration", t_q2["influx_duration"])
 
             write_api.write(bucket=bucket, org=org, record=point)
 
