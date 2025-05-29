@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Stop grafana
+./down-grafana.sh
+
 # Stop Spark
 ./down-spark.sh
 

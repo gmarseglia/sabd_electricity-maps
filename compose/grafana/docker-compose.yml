@@ -1,0 +1,19 @@
+services:
+  grafana:
+    image: bitnami/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - sabd-net
+    volumes:
+      - data:/opt/bitnami/grafana
+
+networks:
+  sabd-net:
+    name: sabd-net
+    driver: bridge
+    external: true
+
+volumes:
+  data:

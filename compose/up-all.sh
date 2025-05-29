@@ -11,3 +11,6 @@ docker network create --driver bridge sabd-net
 
 # Start Spark
 ./up-spark.sh
+
+# Start Grafana
+./up-grafana.sh
