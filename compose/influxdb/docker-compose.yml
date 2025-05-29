@@ -13,9 +13,14 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken
     networks:
       - sabd-net
+    volumes:
+      - influxdb:/var/lib/influxdb2
 
 networks:
-    sabd-net:
-        name: sabd-net
-        driver: bridge
-        external: true
+  sabd-net:
+    name: sabd-net
+    driver: bridge
+    external: true
+
+volumes:
+  influxdb:
