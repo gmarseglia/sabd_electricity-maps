@@ -26,7 +26,7 @@ def query1(
         return query_1_df(spark, italy_file, sweden_file, use_cache, debug)
 
     if api == "sql":
-        return query_1_sql(spark, italy_file, sweden_file)
+        return query_1_sql(spark, italy_file, sweden_file, debug)
 
     raise Exception("API not supported")
 
@@ -167,25 +167,27 @@ def query_1_df(
     return result
 
 
-def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
+def query_1_sql(
+    spark: SparkSession, italy_file: str, sweden_file: str, debug: bool = False
+):
     # Read data
     if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
-        italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+        italy_raw = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
         )
-        sweden_df = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
+        sweden_raw = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
         )
     elif italy_file.endswith(".parquet") and sweden_file.endswith(".parquet"):
-        italy_df = spark.read.parquet(italy_file)
-        sweden_df = spark.read.parquet(sweden_file)
+        italy_raw = spark.read.parquet(italy_file)
+        sweden_raw = spark.read.parquet(sweden_file)
     elif italy_file.endswith(".avro") and sweden_file.endswith(".avro"):
-        italy_df = spark.read.format("avro").load(italy_file)
-        sweden_df = spark.read.format("avro").load(sweden_file)
+        italy_raw = spark.read.format("avro").load(italy_file)
+        sweden_raw = spark.read.format("avro").load(sweden_file)
     else:
         raise Exception("Invalid file format: {italy_file} and {sweden_file}")
 
-    italy_df.union(sweden_df).createOrReplaceTempView("carbon_data")
+    italy_raw.union(sweden_raw).createOrReplaceTempView("carbon_data")
 
     result = spark.sql(
         """
@@ -198,5 +200,6 @@ def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
         ORDER BY country, year
         """
     )
+    print_debug(result, "result", debug)
 
     return result
