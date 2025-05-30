@@ -6,11 +6,6 @@ from tabulate import tabulate
 from custom_formatter import *
 
 
-def print_debug(data, name, debug):
-    if debug:
-        print(f"{name}: {data.take(1)}")
-
-
 def query1(
     spark: SparkSession,
     italy_file: str,

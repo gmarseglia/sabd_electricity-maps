@@ -7,71 +7,86 @@ from tabulate import tabulate
 from custom_formatter import *
 
 
-def query2(spark: SparkSession, italy_file: str, api: str, use_cache: bool = True):
+def query2(
+    spark: SparkSession,
+    italy_file: str,
+    api: str,
+    use_cache: bool = True,
+    debug: bool = False,
+):
     if api == "rdd":
-        return query2_rdd(spark, italy_file, use_cache)
+        return query2_rdd(spark, italy_file, use_cache, debug)
     if api == "df":
-        return query2_df(spark, italy_file, use_cache)
+        return query2_df(spark, italy_file, use_cache, debug)
     if api == "sql":
-        return query2_sql(spark, italy_file)
+        return query2_sql(spark, italy_file, debug)
     raise Exception("API not supported")
 
 
-def query2_rdd(spark: SparkSession, italy_file: str, use_cache: bool = True):
+def query2_rdd(
+    spark: SparkSession, italy_file: str, use_cache: bool = True, debug: bool = False
+):
     if italy_file.endswith(".csv"):
         sc = spark.sparkContext
-        italy_rdd = sc.textFile(italy_file)
+        italy_raw = sc.textFile(italy_file)
     else:
         raise Exception(f"Invalid file format for RDD API implementation: {italy_file}")
 
-    base = italy_rdd.map(
+    base = italy_raw.map(
         lambda x: (
-            (get_country(x), get_year(x), get_month(x)),
+            (get_year(x), get_month(x)),
             (get_co2_intensity(x), get_c02_free(x), 1),
         )
     )
+    print_debug(base, "base", debug)
 
-    avg = base.reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1], x[2] + y[2])).map(
-        lambda x: (x[0], (x[1][0] / x[1][2], x[1][1] / x[1][2]))
+    avg = (
+        base.reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1], x[2] + y[2]))
+        .map(lambda x: (x[0], (x[1][0] / x[1][2], x[1][1] / x[1][2])))
+        .map(lambda x: (x[0][0] + "_" + x[0][1], x[1][0], x[1][1]))
     )
 
-    avg = avg.map(lambda x: (x[0][0], x[0][1], x[0][2], x[1][0], x[1][1])).map(
-        lambda x: (x[1] + "_" + x[2], x[3], x[4])
-    )
     if use_cache:
         avg = avg.cache()
+    print_debug(avg, "avg", debug)
 
-    rdd_by_carbon_intensity = avg.sortBy(lambda x: x[1], ascending=False)
+    total_count = avg.count()
+
+    by_carbon_intensity = avg.sortBy(lambda x: x[1], ascending=False)
     if use_cache:
-        rdd_by_carbon_intensity = rdd_by_carbon_intensity.cache()
-    rdd_by_carbon_intensity_top = (
-        rdd_by_carbon_intensity.zipWithIndex()
+        by_carbon_intensity = by_carbon_intensity.cache()
+
+    by_carbon_intensity_top = (
+        by_carbon_intensity.zipWithIndex()
         .filter(lambda x: x[1] < 5)
         .map(lambda x: x[0])
     )
+
     rdd_by_carbon_intensity_bottom = (
-        rdd_by_carbon_intensity.sortBy(lambda x: x[1], ascending=True)
-        .zipWithIndex()
-        .filter(lambda x: x[1] < 5)
+        by_carbon_intensity.zipWithIndex()
+        .filter(lambda x: x[1] >= total_count - 5)
         .map(lambda x: x[0])
+        .sortBy(lambda x: x[1], ascending=True)
     )
 
     rdd_by_cfe = avg.sortBy(lambda x: x[2], ascending=False)
     if use_cache:
         rdd_by_cfe = rdd_by_cfe.cache()
+
     rdd_by_cfe_top = (
         rdd_by_cfe.zipWithIndex().filter(lambda x: x[1] < 5).map(lambda x: x[0])
     )
+
     rdd_by_cfe_bottom = (
-        rdd_by_cfe.sortBy(lambda x: x[2], ascending=True)
-        .zipWithIndex()
-        .filter(lambda x: x[1] < 5)
+        rdd_by_cfe.zipWithIndex()
+        .filter(lambda x: x[1] >= total_count - 5)
         .map(lambda x: x[0])
+        .sortBy(lambda x: x[2], ascending=True)
     )
 
     return (
-        rdd_by_carbon_intensity,
-        rdd_by_carbon_intensity_top,
+        by_carbon_intensity,
+        by_carbon_intensity_top,
         rdd_by_carbon_intensity_bottom,
         rdd_by_cfe,
         rdd_by_cfe_top,

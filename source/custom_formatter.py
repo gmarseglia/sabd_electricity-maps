@@ -74,3 +74,7 @@ def shorten_country(x: str) -> str:
     if x == "Italy":
         return "IT"
     return x
+
+def print_debug(data, name, debug):
+    if debug:
+        print(f"{name}: {data.take(1)}")
