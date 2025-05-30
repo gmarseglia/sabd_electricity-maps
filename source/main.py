@@ -29,7 +29,7 @@ def q1():
     )
 
     if args.timed:
-        result1.collect()
+        result1.count()
         t_q1["query_end"] = time.perf_counter()
         t_q1["query_duration"] = round(t_q1["query_end"] - t_q1["query_start"], 3)
         print(f"Query 1 took {t_q1['query_duration']} seconds")
@@ -52,8 +52,13 @@ def q1():
             result1 = result1.toDF(QUERY_1_COLUMNS)
 
         # Write DataFrame to CSV
-        result1.coalesce(1).write.mode("overwrite").csv(
-            f"{PREFIX}/results/query_1/{args.api}-{args.format}", header=True
+        if args.coalesce:
+            output1 = result1.coalesce(1)
+        else:
+            output1 = result1
+        output1.write.mode("overwrite").csv(
+            f"{PREFIX}/results/query_1/{args.api}-{args.format}-{'1' if args.coalesce else 'n'}",
+            header=True,
         )
 
         if args.timed:
@@ -103,6 +108,7 @@ def q1():
             .tag("api", args.api)
             .tag("format", args.format)
             .tag("cache", not args.no_cache)
+            .tag("coalesce", args.coalesce)
             .field("query_duration", t_q1["query_duration"])
         )
         if args.save_fs:
@@ -132,7 +138,7 @@ def q2():
 
     if args.timed:
         for result in result2.values():
-            result.collect()
+            result.count()
         t_q2["query_end"] = time.perf_counter()
         t_q2["query_duration"] = round(t_q2["query_end"] - t_q2["query_start"], 3)
         print(f"Query 2 took {t_q2['query_duration']} seconds")
@@ -163,8 +169,12 @@ def q2():
                 result2[key] = result2[key].toDF(QUERY_2_COLUMNS)
 
         for key in result2.keys():
-            result2[key].coalesce(1).write.mode("overwrite").csv(
-                f"{PREFIX}/results/query_2/{args.api}-{args.format}/{key}",
+            if args.coalesce:
+                output = result2[key].coalesce(1)
+            else:
+                output = result2[key]
+            output.write.mode("overwrite").csv(
+                f"{PREFIX}/results/query_2/{args.api}-{args.format}-{'1' if args.coalesce else 'n'}/{key}",
                 header=True,
             )
 
@@ -207,6 +217,7 @@ def q2():
             .tag("api", args.api)
             .tag("format", args.format)
             .tag("cache", not args.no_cache)
+            .tag("coalesce", args.coalesce)
         )
         point.field("query_duration", t_q2["query_duration"])
         if args.save_fs:
@@ -230,9 +241,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--save-fs", dest="save_fs", action="store_true")
     arg_parser.add_argument("--save-influx", dest="save_influx", action="store_true")
     arg_parser.add_argument("--timed", action="store_true")
-    arg_parser.add_argument("--debug", action="store_true")
     arg_parser.add_argument("--format", type=str, default="csv")
     arg_parser.add_argument("--no-cache", dest="no_cache", action="store_true")
+    arg_parser.add_argument("--coalesce", action="store_true")
     args = arg_parser.parse_args()
 
     if not args.q1 and not args.q2:
