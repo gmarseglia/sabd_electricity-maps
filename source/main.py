@@ -26,6 +26,7 @@ def q1():
         sweden_file=SWEDEN_HOURLY_FILE,
         api=args.api,
         use_cache=not args.no_cache,
+        debug=args.debug,
     )
 
     if args.timed:
@@ -134,7 +135,13 @@ def q2():
         result2["by_cfe"],
         result2["by_cfe_top"],
         result2["by_cfe_bottom"],
-    ) = query2(spark, ITALY_HOURLY_FILE, args.api, use_cache=not args.no_cache)
+    ) = query2(
+        spark,
+        ITALY_HOURLY_FILE,
+        args.api,
+        use_cache=not args.no_cache,
+        debug=args.debug,
+    )
 
     if args.timed:
         for result in result2.values():
@@ -244,6 +251,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--format", type=str, default="csv")
     arg_parser.add_argument("--no-cache", dest="no_cache", action="store_true")
     arg_parser.add_argument("--coalesce", action="store_true")
+    arg_parser.add_argument("--debug", action="store_true")
     args = arg_parser.parse_args()
 
     if not args.q1 and not args.q2:

@@ -6,15 +6,21 @@ from tabulate import tabulate
 from custom_formatter import *
 
 
+def print_debug(data, name, debug):
+    if debug:
+        print(f"{name}: {data.take(1)}")
+
+
 def query1(
     spark: SparkSession,
     italy_file: str,
     sweden_file: str,
     api: str,
     use_cache: bool = True,
+    debug: bool = False,
 ):
     if api == "default" or api == "rdd":
-        return query_1_rdd(spark, italy_file, sweden_file, use_cache)
+        return query_1_rdd(spark, italy_file, sweden_file, use_cache, debug)
 
     if api == "df":
         return query_1_df(spark, italy_file, sweden_file, use_cache)
@@ -26,44 +32,49 @@ def query1(
 
 
 def query_1_rdd(
-    spark: SparkSession, italy_file: str, sweden_file: str, use_cache: bool = True
+    spark: SparkSession,
+    italy_file: str,
+    sweden_file: str,
+    use_cache: bool = True,
+    debug: bool = False,
 ):
+    # Read data
     if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
         sc = spark.sparkContext
-        italy_rdd = sc.textFile(italy_file)
-        sweden_rdd = sc.textFile(sweden_file)
+        raw_italy = sc.textFile(italy_file)
+        raw_sweden = sc.textFile(sweden_file)
     else:
         raise Exception(
             f"Invalid file format for RDD API implementation: {italy_file} and {sweden_file}"
         )
 
-    hourly_rdd = italy_rdd.union(sweden_rdd)
+    # Combine data
+    combined = raw_italy.union(raw_sweden)
+    print_debug(combined, "combined", debug)
 
-    queries_base = hourly_rdd.map(
+    # Query 1.1: Average "CO2 Intensity" and "CO2 Free" by year ad by country
+    base = combined.map(
         lambda x: (
-            (get_country(x), get_year(x), get_month(x)),
+            (get_country(x), get_year(x)),
             (get_co2_intensity(x), get_c02_free(x), 1),
         )
     )
-
-    # Query 1.1: Average "CO2 Intensity" and "CO2 Free" by year ad by country
-    query_1_base = queries_base.map(lambda x: ((x[0][0], x[0][1]), x[1]))
     if use_cache:
-        query_1_base = query_1_base.cache()
+        base = base.cache()
+    print_debug(base, "base", debug)
 
-    avg_by_country = query_1_base.reduceByKey(
+    avg_by_country = base.reduceByKey(
         lambda x, y: (x[0] + y[0], x[1] + y[1], x[2] + y[2])
     ).map(lambda x: (x[0], (x[1][0] / x[1][2], x[1][1] / x[1][2])))
+    print_debug(avg_by_country, "avg_by_country", debug)
 
-    min_by_country = query_1_base.reduceByKey(
-        lambda x, y: (min(x[0], y[0]), min(x[1], y[1]))
-    )
+    min_by_country = base.reduceByKey(lambda x, y: (min(x[0], y[0]), min(x[1], y[1])))
+    print_debug(min_by_country, "min_by_country", debug)
 
-    max_by_country = query_1_base.reduceByKey(
-        lambda x, y: (max(x[0], y[0]), max(x[1], y[1]))
-    )
+    max_by_country = base.reduceByKey(lambda x, y: (max(x[0], y[0]), max(x[1], y[1])))
+    print_debug(max_by_country, "max_by_country", debug)
 
-    query_1 = (
+    result = (
         avg_by_country.join(min_by_country)
         .join(max_by_country)
         .map(
@@ -79,14 +90,23 @@ def query_1_rdd(
             )
         )
         .sortBy(lambda x: x[0] + x[1], True)
+        # Use project format
+        .map(
+            lambda x: (
+                x[1],
+                shorten_country(str(x[0])),
+                x[2],
+                x[3],
+                x[4],
+                x[5],
+                x[6],
+                x[7],
+            )
+        )
     )
+    print_debug(result, "result", debug)
 
-    # Use project format
-    query_1 = query_1.map(
-        lambda x: (x[1], shorten_country(str(x[0])), x[2], x[3], x[4], x[5], x[6], x[7])
-    )
-
-    return query_1
+    return result
 
 
 def query_1_df(
