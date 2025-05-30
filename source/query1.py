@@ -23,7 +23,7 @@ def query1(
         return query_1_rdd(spark, italy_file, sweden_file, use_cache, debug)
 
     if api == "df":
-        return query_1_df(spark, italy_file, sweden_file, use_cache)
+        return query_1_df(spark, italy_file, sweden_file, use_cache, debug)
 
     if api == "sql":
         return query_1_sql(spark, italy_file, sweden_file)
@@ -110,35 +110,42 @@ def query_1_rdd(
 
 
 def query_1_df(
-    spark: SparkSession, italy_file: str, sweden_file: str, use_cache: bool = True
+    spark: SparkSession,
+    italy_file: str,
+    sweden_file: str,
+    use_cache: bool = True,
+    debug: bool = False,
 ):
     # Read data
     if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
-        italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+        raw_italy = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
         )
-        sweden_df = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
+        raw_sweden = spark.read.csv(sweden_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
         )
     elif italy_file.endswith(".parquet") and sweden_file.endswith(".parquet"):
-        italy_df = spark.read.parquet(italy_file)
-        sweden_df = spark.read.parquet(sweden_file)
+        raw_italy = spark.read.parquet(italy_file)
+        raw_sweden = spark.read.parquet(sweden_file)
     elif italy_file.endswith(".avro") and sweden_file.endswith(".avro"):
-        italy_df = spark.read.format("avro").load(italy_file)
-        sweden_df = spark.read.format("avro").load(sweden_file)
+        raw_italy = spark.read.format("avro").load(italy_file)
+        raw_sweden = spark.read.format("avro").load(sweden_file)
     else:
         raise Exception("Invalid file format: {italy_file} and {sweden_file}")
 
-    # Format data
-    df = italy_df.union(sweden_df)
+    # Combine data
+    combined = raw_italy.union(raw_sweden)
+    print_debug(combined, "combined", debug)
 
-    df = df.withColumn("Year", split(col("Datetime"), "-").getItem(0)).select(
+    base = combined.withColumn("Year", split(col("Datetime"), "-").getItem(0)).select(
         *COLUMN_NAMES_DF_1
     )
     if use_cache:
-        df = df.cache()
+        base = base.cache()
+    print_debug(base, "base", debug)
 
-    df = df.groupBy("Country", "Year").agg(
+    # Query 1.1: Average "CO2 Intensity" and "CO2 Free" by year ad by country
+    result = base.groupBy("Country", "Year").agg(
         F.avg("CO2_intensity_direct").alias(QUERY_1_COLUMNS[2]),
         F.min("CO2_intensity_direct").alias(QUERY_1_COLUMNS[3]),
         F.max("CO2_intensity_direct").alias(QUERY_1_COLUMNS[4]),
@@ -147,15 +154,17 @@ def query_1_df(
         F.max("Carbon_free_energy_percent").alias(QUERY_1_COLUMNS[7]),
     )
 
+    # Reformat
     udf_shorten_country = F.udf(shorten_country, "string")
-    df = (
-        df.withColumn("country", udf_shorten_country(df["Country"]))
+    result = (
+        result.withColumn("country", udf_shorten_country(result["Country"]))
         .orderBy("country", "Year")
         .withColumnRenamed("Year", "date")
         .select(*QUERY_1_COLUMNS)
     )
+    print_debug(result, "result", debug)
 
-    return df
+    return result
 
 
 def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
