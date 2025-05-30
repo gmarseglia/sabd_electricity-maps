@@ -130,6 +130,7 @@ def query_1_df(
     udf_shorten_country = F.udf(shorten_country, "string")
     df = (
         df.withColumn("country", udf_shorten_country(df["Country"]))
+        .orderBy("country", "Year")
         .withColumnRenamed("Year", "date")
         .select(*QUERY_1_COLUMNS)
     )
