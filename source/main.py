@@ -30,7 +30,7 @@ def q1():
     )
 
     if args.timed:
-        result1.count()
+        result1.collect()
         t_q1["query_end"] = time.perf_counter()
         t_q1["query_duration"] = round(t_q1["query_end"] - t_q1["query_start"], 3)
         print(f"Query 1 took {t_q1['query_duration']} seconds")
@@ -145,7 +145,7 @@ def q2():
 
     if args.timed:
         for result in result2.values():
-            result.count()
+            result.collect()
         t_q2["query_end"] = time.perf_counter()
         t_q2["query_duration"] = round(t_q2["query_end"] - t_q2["query_start"], 3)
         print(f"Query 2 took {t_q2['query_duration']} seconds")
