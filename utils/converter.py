@@ -22,30 +22,44 @@ def list_csv_files(directory) -> list[str]:
 
 
 # Create a Spark session
-spark = SparkSession.builder.appName("Read and Write Parquet").getOrCreate()
+spark = (
+    SparkSession.builder.appName("Read and Write Parquet")
+    .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.5")
+    .getOrCreate()
+)
 
 dataset_dir = "../dataset/combined/"
 csv_files = list_csv_files(dataset_dir)
 
-for file in csv_files:
-    print(f"Processing file: {file}")
-    parquet_dir = file.replace(".csv", "") + "/"
-    
-    shutil.rmtree(parquet_dir)
-    
-    # Read a file into a DataFrame
-    df = spark.read.csv(file, header=False, inferSchema=True).toDF(*COLUMN_NAMES_RAW)
+# for format in ["parquet", "avro"]:
+for format in ["avro"]:
+    for file in csv_files:
+        print(f"Processing file: {file}")
+        temp_dir = file.replace(".csv", "") + "/"
 
-    # Write the DataFrame to Parquet format
-    df.coalesce(1).write.mode("overwrite").parquet(parquet_dir)
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
-    parquet_file = [
-        parquet_dir + f for f in os.listdir(parquet_dir) if f.endswith(".parquet")
-    ][0]
-    print(f"File {parquet_file} created in {parquet_dir}")
-    # Move the original csv file to a backup dir
-    shutil.move(parquet_file, file.replace(".csv", ".parquet"))
-    shutil.rmtree(parquet_dir)
+        # Read a file into a DataFrame
+        df = spark.read.csv(file, header=False, inferSchema=True).toDF(
+            *COLUMN_NAMES_RAW
+        )
+
+        # Write the DataFrame to Parquet format
+        if format == "parquet":
+            df.coalesce(1).write.mode("overwrite").parquet(temp_dir)
+        elif format == "avro":
+            os.makedirs(temp_dir, exist_ok=True)
+            df.coalesce(1).write.mode("overwrite").format("avro").save(temp_dir)
+        else:
+            raise Exception("Invalid format")
+
+        formatted_file = [
+            temp_dir + f for f in os.listdir(temp_dir) if f.endswith(f".{format}")
+        ][0]
+        print(f"File {formatted_file} created in {temp_dir}")
+        # Move the original csv file to a backup dir
+        shutil.move(formatted_file, file.replace(".csv", f".{format}"))
+        shutil.rmtree(temp_dir)
 
 # Stop the Spark session
 spark.stop()

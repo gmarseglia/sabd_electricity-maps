@@ -11,7 +11,7 @@ RUNS_FOR_EXPERIMENT = 5
 EXPERIMENT_1 = list(
     product(["1", "2"], ["rdd", "df", "sql", "baseline"], ["csv"], [True])
 )
-EXPERIMENT_2 = list(product(["1", "2"], ["df", "sql"], ["parquet"], [True]))
+EXPERIMENT_2 = list(product(["1", "2"], ["df", "sql"], ["parquet", "avro"], [True]))
 EXPERIMENT_3 = list(product(["1", "2"], ["rdd", "df"], ["csv"], [False]))
 EXPERIMENTS = EXPERIMENT_1 + EXPERIMENT_2 + EXPERIMENT_3
 

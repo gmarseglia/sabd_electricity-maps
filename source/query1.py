@@ -103,6 +103,9 @@ def query_1_df(
     elif italy_file.endswith(".parquet") and sweden_file.endswith(".parquet"):
         italy_df = spark.read.parquet(italy_file)
         sweden_df = spark.read.parquet(sweden_file)
+    elif italy_file.endswith(".avro") and sweden_file.endswith(".avro"):
+        italy_df = spark.read.format("avro").load(italy_file)
+        sweden_df = spark.read.format("avro").load(sweden_file)
     else:
         raise Exception("Invalid file format: {italy_file} and {sweden_file}")
 
@@ -134,21 +137,6 @@ def query_1_df(
     return df
 
 
-# COLUMN_NAMES_RAW = [
-#     "Datetime",
-#     "Country",
-#     "Zone_name",
-#     "Zone_id",
-#     "CO2_intensity_direct",
-#     "CO2_intensity_lifecycle",
-#     "Carbon_free_energy_percent",
-#     "Renewable_energy_percent",
-#     "Data_source",
-#     "Data_estimated",
-#     "Data_estimation_method",
-# ]
-
-
 def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
     # Read data
     if italy_file.endswith(".csv") and sweden_file.endswith(".csv"):
@@ -161,6 +149,9 @@ def query_1_sql(spark: SparkSession, italy_file: str, sweden_file: str):
     elif italy_file.endswith(".parquet") and sweden_file.endswith(".parquet"):
         italy_df = spark.read.parquet(italy_file)
         sweden_df = spark.read.parquet(sweden_file)
+    elif italy_file.endswith(".avro") and sweden_file.endswith(".avro"):
+        italy_df = spark.read.format("avro").load(italy_file)
+        sweden_df = spark.read.format("avro").load(sweden_file)
     else:
         raise Exception("Invalid file format: {italy_file} and {sweden_file}")
 

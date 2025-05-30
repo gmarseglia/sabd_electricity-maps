@@ -37,9 +37,6 @@ if __name__ == "__main__":
     if not args.q1 and not args.q2:
         raise Exception("At least one query must be selected")
 
-    if not args.format == "csv" and not args.format == "parquet":
-        raise Exception("At least one format must be selected")
-
     ITALY_HOURLY_FILE = (
         f"{PREFIX}/dataset/combined/combined_dataset-italy_hourly.{args.format}"
     )
@@ -53,7 +50,11 @@ if __name__ == "__main__":
     """
     Spark setup
     """
-    spark = SparkSession.builder.appName("SABD - Electricy Maps").getOrCreate()
+    spark = (
+        SparkSession.builder.appName("SABD - Electricy Maps")
+        .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.5")
+        .getOrCreate()
+    )
     sc = spark.sparkContext
     # sc.setLogLevel("WARN")
 
