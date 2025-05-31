@@ -102,7 +102,7 @@ def query2_df(spark: SparkSession, italy_file: str, use_cache: bool = True):
     elif italy_file.endswith(".parquet"):
         df = spark.read.parquet(italy_file)
     elif italy_file.endswith(".avro"):
-        italy_df = spark.read.format("avro").load(italy_file)
+        df = spark.read.format("avro").load(italy_file)
     else:
         raise Exception("Invalid file format for DF API implementation: {italy_file}")
 

@@ -7,7 +7,7 @@ from itertools import product
 SOURCE_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/source"
 RESULTS_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/results/experiments"
 
-RUNS_FOR_EXPERIMENT = 5
+RUNS_FOR_EXPERIMENT = 1
 EXPERIMENT_1 = list(
     product(["1", "2"], ["rdd", "df", "sql", "baseline"], ["csv"], [True])
 )
@@ -71,6 +71,8 @@ def execute_cmd(
                     zipf.write(filepath, arcname=filepath)
 
     print(f"Running command: {cmd}")
+
+    return
 
     start = time.perf_counter()
 
