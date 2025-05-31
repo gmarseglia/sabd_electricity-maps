@@ -75,7 +75,6 @@ def q1():
             t_q1["influx_start"] = time.perf_counter()
 
         # Write DataFrame to InfluxDB
-        bucket = args.influx_bucket
         for row in result1.collect():
             point = (
                 Point("query_1")
