@@ -8,7 +8,7 @@ from itertools import product
 SOURCE_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/source"
 RESULTS_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/results/experiments"
 
-RUNS_FOR_EXPERIMENT = 1
+RUNS_FOR_EXPERIMENT = 20
 EXPERIMENT_1 = list(
     product(["1", "2"], ["rdd", "df", "sql", "baseline"], ["csv"], [True])
 )
@@ -122,7 +122,10 @@ def pretty_duration(seconds):
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--custom", type=str, default="")
+    arg_parser.add_argument("--runs", type=int, default=RUNS_FOR_EXPERIMENT)
     args = arg_parser.parse_args()
+
+    RUNS_FOR_EXPERIMENT = args.runs
 
     docker_client = docker.from_env()
     spark_client_container = docker_client.containers.get("spark-client")
