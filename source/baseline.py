@@ -200,7 +200,7 @@ if __name__ == "__main__":
                 .tag("mode", args.mode)
                 .tag("api", "baseline")
                 .tag("custom", args.custom)
-                .field("query_duration", t_q2["query_duration"])
+                .field("query_duration", t_q1["query_duration"])
             )
             write_api.write(bucket=bucket, org=org, record=point)
 
