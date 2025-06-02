@@ -31,8 +31,7 @@ spark = (
 dataset_dir = "../dataset/combined/"
 csv_files = list_csv_files(dataset_dir)
 
-# for format in ["parquet", "avro"]:
-for format in ["avro"]:
+for format in ["parquet", "avro"]:
     for file in csv_files:
         print(f"Processing file: {file}")
         temp_dir = file.replace(".csv", "") + "/"
