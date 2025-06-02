@@ -265,9 +265,11 @@ if __name__ == "__main__":
     if args.mode == "local":
         PREFIX = ".."
         INFLUX_HOST = "localhost"
+        JARS_PATH = "org.apache.spark:"
     elif args.mode == "composed":
         PREFIX = "hdfs://master:54310"
         INFLUX_HOST = "influxdb"
+        JARS_PATH = "/opt/spark/jars/"
 
     ITALY_HOURLY_FILE = (
         f"{PREFIX}/dataset/combined/combined_dataset-italy_hourly.{args.format}"
@@ -281,7 +283,7 @@ if __name__ == "__main__":
     """
     spark = (
         SparkSession.builder.appName("SABD - Electricy Maps")
-        .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.5")
+        .config("spark.jars.packages", f"{JARS_PATH}spark-avro_2.12:3.5.5")
         .getOrCreate()
     )
     sc = spark.sparkContext

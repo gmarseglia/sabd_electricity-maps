@@ -12,6 +12,7 @@ WORKDIR /opt/spark/work-dir
 
 # Copy requirements first for caching
 COPY requirements.txt .
+COPY jars/* /opt/spark/jars/
 
 # Install dependencies without cache
 RUN python3 -m pip install --upgrade pip
