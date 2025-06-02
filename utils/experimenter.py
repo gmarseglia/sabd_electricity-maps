@@ -1,4 +1,5 @@
 import argparse
+import shutil
 import docker
 import os
 import zipfile
@@ -6,9 +7,9 @@ import time
 from itertools import product
 
 SOURCE_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/source"
-RESULTS_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/results/experiments"
+OUTPUTS_DIR = "/home/giuseppe/SABD/sabd_electricity-maps/results/experiments"
 
-RUNS_FOR_EXPERIMENT = 20
+RUNS_FOR_EXPERIMENT = 10
 EXPERIMENT_1 = list(
     product(["1", "2"], ["rdd", "df", "sql", "baseline"], ["csv"], [True])
 )
@@ -36,7 +37,6 @@ def create_cmd(
                 f" --mode {mode}"
                 " --save-influx"
                 " --timed"
-                f" --custom {args.custom}"
                 f" --q{query}"
                 f"{str_cache}"
                 f"{str_custom}"
@@ -95,8 +95,8 @@ def execute_cmd(
 
     if write_result:
         # Create the results directory
-        os.makedirs(RESULTS_DIR, exist_ok=True)
-        os.chdir(RESULTS_DIR)
+        os.makedirs(OUTPUTS_DIR, exist_ok=True)
+        os.chdir(OUTPUTS_DIR)
         with open(f"result_{short_cmd}.txt", "w") as f:
             f.write(exec_result.output.decode("utf-8") + "\n")
 
@@ -132,6 +132,8 @@ if __name__ == "__main__":
 
     total_runs = RUNS_FOR_EXPERIMENT * len(EXPERIMENTS)
     start = time.perf_counter()
+
+    shutil.rmtree(OUTPUTS_DIR, ignore_errors=True)
 
     completed_runs = 0
     for n in range(RUNS_FOR_EXPERIMENT):
