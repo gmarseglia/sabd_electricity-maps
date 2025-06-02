@@ -1,3 +1,4 @@
+import argparse
 import docker
 import os
 import zipfile
@@ -25,29 +26,41 @@ def create_cmd(
 ):
     str_cache = " --no-cache" if not cache else ""
     short_str_cache = "-no-cache" if not cache else ""
+    str_custom = f" --custom {args.custom}" if args.custom != "" else ""
+    short_str_custom = f"_:{args.custom}" if args.custom != "" else ""
     if api == "baseline":
         return (
-            "python3" " source/baseline.py" f" --mode {mode}"
-            # " --save-fs"
-            " --save-influx" " --timed" f" --q{query}" f"{str_cache}",
-            f"q{query}-baseline-csv{short_str_cache}",
+            (
+                "python3"
+                " source/baseline.py"
+                f" --mode {mode}"
+                " --save-influx"
+                " --timed"
+                f" --custom {args.custom}"
+                f" --q{query}"
+                f"{str_cache}"
+                f"{str_custom}"
+            ),
+            f"q{query}-baseline-csv{short_str_cache}{short_str_custom}",
         )
     else:
         return (
-            "/opt/spark/bin/spark-submit"
-            " --master spark://spark-master:7077"
-            " --deploy-mode client"
-            " --py-files source/source.zip"
-            " source/main.py"
-            f" --mode {mode}"
-            # " --save-fs"
-            " --save-influx"
-            " --timed"
-            f" --q{query}"
-            f" --api {api}"
-            f" --format {format}"
-            f"{str_cache}",
-            f"q{query}-{api}-{format}{short_str_cache}",
+            (
+                "/opt/spark/bin/spark-submit"
+                " --master spark://spark-master:7077"
+                " --deploy-mode client"
+                " --py-files source/source.zip"
+                " source/main.py"
+                " --save-influx"
+                " --timed"
+                f" --mode {mode}"
+                f" --q{query}"
+                f" --api {api}"
+                f" --format {format}"
+                f"{str_cache}"
+                f"{str_custom}"
+            ),
+            f"q{query}-{api}-{format}{short_str_cache}{short_str_custom}",
         )
 
 
@@ -107,6 +120,10 @@ def pretty_duration(seconds):
 
 
 if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--custom", type=str, default="")
+    args = arg_parser.parse_args()
+
     docker_client = docker.from_env()
     spark_client_container = docker_client.containers.get("spark-client")
 

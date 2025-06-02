@@ -109,6 +109,7 @@ def q1():
             .tag("format", args.format)
             .tag("cache", not args.no_cache)
             .tag("coalesce", args.coalesce)
+            .tag("custom", args.custom)
             .field("query_duration", t_q1["query_duration"])
         )
         if args.save_fs:
@@ -224,6 +225,7 @@ def q2():
             .tag("format", args.format)
             .tag("cache", not args.no_cache)
             .tag("coalesce", args.coalesce)
+            .tag("custom", args.custom)
         )
         point.field("query_duration", t_q2["query_duration"])
         if args.save_fs:
@@ -251,6 +253,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--no-cache", dest="no_cache", action="store_true")
     arg_parser.add_argument("--coalesce", action="store_true")
     arg_parser.add_argument("--debug", action="store_true")
+    arg_parser.add_argument("--custom", type=str, default="")
     args = arg_parser.parse_args()
 
     if not args.q1 and not args.q2:

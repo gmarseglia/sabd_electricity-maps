@@ -139,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("--timed", action="store_true")
     parser.add_argument("--save-fs", dest="save_fs", action="store_true")
     parser.add_argument("--save-influx", dest="save_influx", action="store_true")
+    parser.add_argument("--custom", type=str, default="")
     args = parser.parse_args()
 
     if args.mode == "local":
@@ -276,7 +277,7 @@ if __name__ == "__main__":
                 .time(datetime.now(timezone.utc), write_precision=WritePrecision.MS)
                 .tag("mode", args.mode)
                 .tag("api", "baseline")
-                .field("query_duration", t_q2['query_duration'])
+                .tag("custom", args.custom)
+                .field("query_duration", t_q2["query_duration"])
             )
             write_api.write(bucket=bucket, org=org, record=point)
-    
