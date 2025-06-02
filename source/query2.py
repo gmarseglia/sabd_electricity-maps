@@ -94,7 +94,7 @@ def query2_rdd(
     )
 
 
-def query2_df(spark: SparkSession, italy_file: str, use_cache: bool = True):
+def query2_df(spark: SparkSession, italy_file: str, use_cache: bool = True, debug: bool = False):
     if italy_file.endswith(".csv"):
         df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
@@ -147,7 +147,7 @@ def query2_df(spark: SparkSession, italy_file: str, use_cache: bool = True):
     )
 
 
-def query2_sql(spark: SparkSession, italy_file: str):
+def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     # Read data
     if italy_file.endswith(".csv"):
         italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
