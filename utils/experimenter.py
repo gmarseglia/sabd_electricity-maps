@@ -72,8 +72,6 @@ def execute_cmd(
 
     print(f"Running command: {cmd}")
 
-    return
-
     start = time.perf_counter()
 
     exec_result = container.exec_run(cmd)
