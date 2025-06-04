@@ -52,49 +52,49 @@ def query2_rdd(
 
     total_count = avg.count()
 
-    by_carbon_intensity = avg.sortBy(lambda x: x[1], ascending=False)
+    by_carbon_intensity = avg.sortBy(lambda x: x[1], ascending=False).zipWithIndex()
     if use_cache:
         by_carbon_intensity = by_carbon_intensity.cache()
 
-    by_carbon_intensity_top = (
-        by_carbon_intensity.zipWithIndex()
-        .filter(lambda x: x[1] < 5)
-        .map(lambda x: x[0])
+    by_carbon_intensity_all = by_carbon_intensity.map(lambda x: x[0])
+
+    by_carbon_intensity_top = by_carbon_intensity.filter(lambda x: x[1] < 5).map(
+        lambda x: x[0]
     )
 
     rdd_by_carbon_intensity_bottom = (
-        by_carbon_intensity.zipWithIndex()
-        .filter(lambda x: x[1] >= total_count - 5)
+        by_carbon_intensity.filter(lambda x: x[1] >= total_count - 5)
         .map(lambda x: x[0])
         .sortBy(lambda x: x[1], ascending=True)
     )
 
-    rdd_by_cfe = avg.sortBy(lambda x: x[2], ascending=False)
+    rdd_by_cfe = avg.sortBy(lambda x: x[2], ascending=False).zipWithIndex()
     if use_cache:
         rdd_by_cfe = rdd_by_cfe.cache()
 
-    rdd_by_cfe_top = (
-        rdd_by_cfe.zipWithIndex().filter(lambda x: x[1] < 5).map(lambda x: x[0])
-    )
+    rdd_by_cfe_all = rdd_by_cfe.map(lambda x: x[0])
+
+    rdd_by_cfe_top = rdd_by_cfe.filter(lambda x: x[1] < 5).map(lambda x: x[0])
 
     rdd_by_cfe_bottom = (
-        rdd_by_cfe.zipWithIndex()
-        .filter(lambda x: x[1] >= total_count - 5)
+        rdd_by_cfe.filter(lambda x: x[1] >= total_count - 5)
         .map(lambda x: x[0])
         .sortBy(lambda x: x[2], ascending=True)
     )
 
     return (
-        by_carbon_intensity,
+        by_carbon_intensity_all,
         by_carbon_intensity_top,
         rdd_by_carbon_intensity_bottom,
-        rdd_by_cfe,
+        rdd_by_cfe_all,
         rdd_by_cfe_top,
         rdd_by_cfe_bottom,
     )
 
 
-def query2_df(spark: SparkSession, italy_file: str, use_cache: bool = True, debug: bool = False):
+def query2_df(
+    spark: SparkSession, italy_file: str, use_cache: bool = True, debug: bool = False
+):
     if italy_file.endswith(".csv"):
         df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
