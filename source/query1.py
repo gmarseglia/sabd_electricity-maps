@@ -135,9 +135,6 @@ def query_1_df(
     base = combined.withColumn("Year", split(col("Datetime"), "-").getItem(0)).select(
         *COLUMN_NAMES_DF_1
     )
-    if use_cache:
-        base = base.cache()
-    print_debug(base, "base", debug)
 
     # Query 1.1: Average "CO2 Intensity" and "CO2 Free" by year ad by country
     result = base.groupBy("Country", "Year").agg(
