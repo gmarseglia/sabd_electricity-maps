@@ -56,7 +56,9 @@ def query2_rdd(
     if use_cache:
         by_carbon_intensity = by_carbon_intensity.cache()
 
-    by_carbon_intensity_all = by_carbon_intensity.map(lambda x: x[0])
+    by_carbon_intensity_all = by_carbon_intensity.map(lambda x: x[0]).sortBy(
+        lambda x: x[0], ascending=True
+    )
 
     by_carbon_intensity_top = by_carbon_intensity.filter(lambda x: x[1] < 5).map(
         lambda x: x[0]
@@ -72,7 +74,7 @@ def query2_rdd(
     if use_cache:
         by_cfe = by_cfe.cache()
 
-    by_cfe_all = by_cfe.map(lambda x: x[0])
+    by_cfe_all = by_cfe.map(lambda x: x[0]).sortBy(lambda x: x[0], ascending=True)
 
     by_cfe_top = by_cfe.filter(lambda x: x[1] < 5).map(lambda x: x[0])
 
