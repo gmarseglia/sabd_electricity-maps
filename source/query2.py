@@ -62,22 +62,22 @@ def query2_rdd(
         lambda x: x[0]
     )
 
-    rdd_by_carbon_intensity_bottom = (
+    by_carbon_intensity_bottom = (
         by_carbon_intensity.filter(lambda x: x[1] >= total_count - 5)
         .map(lambda x: x[0])
         .sortBy(lambda x: x[1], ascending=True)
     )
 
-    rdd_by_cfe = avg.sortBy(lambda x: x[2], ascending=False).zipWithIndex()
+    by_cfe = avg.sortBy(lambda x: x[2], ascending=False).zipWithIndex()
     if use_cache:
-        rdd_by_cfe = rdd_by_cfe.cache()
+        by_cfe = by_cfe.cache()
 
-    rdd_by_cfe_all = rdd_by_cfe.map(lambda x: x[0])
+    by_cfe_all = by_cfe.map(lambda x: x[0])
 
-    rdd_by_cfe_top = rdd_by_cfe.filter(lambda x: x[1] < 5).map(lambda x: x[0])
+    by_cfe_top = by_cfe.filter(lambda x: x[1] < 5).map(lambda x: x[0])
 
-    rdd_by_cfe_bottom = (
-        rdd_by_cfe.filter(lambda x: x[1] >= total_count - 5)
+    by_cfe_bottom = (
+        by_cfe.filter(lambda x: x[1] >= total_count - 5)
         .map(lambda x: x[0])
         .sortBy(lambda x: x[2], ascending=True)
     )
@@ -85,10 +85,10 @@ def query2_rdd(
     return (
         by_carbon_intensity_all,
         by_carbon_intensity_top,
-        rdd_by_carbon_intensity_bottom,
-        rdd_by_cfe_all,
-        rdd_by_cfe_top,
-        rdd_by_cfe_bottom,
+        by_carbon_intensity_bottom,
+        by_cfe_all,
+        by_cfe_top,
+        by_cfe_bottom,
     )
 
 
