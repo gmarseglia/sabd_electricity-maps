@@ -103,6 +103,8 @@ def query2_df(
     else:
         raise Exception("Invalid file format for DF API implementation: {italy_file}")
 
+    print_debug(raw_italy, "raw_italy", debug)
+
     base = (
         raw_italy.withColumn("Year", F.split(F.col("Datetime"), "-").getItem(0))
         .withColumn("Month", F.split(F.col("Datetime"), "-").getItem(1))
