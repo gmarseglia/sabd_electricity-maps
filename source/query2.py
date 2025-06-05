@@ -147,17 +147,17 @@ def query2_df(
 def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     # Read data
     if italy_file.endswith(".csv"):
-        italy_df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+        raw_italy = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
         )
     elif italy_file.endswith(".parquet"):
-        italy_df = spark.read.parquet(italy_file)
+        raw_italy = spark.read.parquet(italy_file)
     elif italy_file.endswith(".avro"):
-        italy_df = spark.read.format("avro").load(italy_file)
+        raw_italy = spark.read.format("avro").load(italy_file)
     else:
         raise Exception("Invalid file format: {italy_file} and {sweden_file}")
 
-    italy_df.createOrReplaceTempView("carbon_data")
+    raw_italy.createOrReplaceTempView("carbon_data")
 
     spark.sql(
         """
@@ -167,7 +167,6 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
             AVG(CO2_intensity_direct) AS `carbon-intensity`, AVG(Carbon_free_energy_percent) AS cfe
         FROM carbon_data
         GROUP BY date
-        ORDER BY date
         """
     )
 
@@ -176,8 +175,10 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
         SELECT 
             *
         FROM base
+        ORDER BY date
         """
     )
+    print_debug(by_date, "by_date", debug)
 
     by_carbon_intensity_top = spark.sql(
         """
