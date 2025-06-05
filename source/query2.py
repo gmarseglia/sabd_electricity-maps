@@ -28,11 +28,11 @@ def query2_rdd(
 ):
     if italy_file.endswith(".csv"):
         sc = spark.sparkContext
-        italy_raw = sc.textFile(italy_file)
+        raw_italy = sc.textFile(italy_file)
     else:
         raise Exception(f"Invalid file format for RDD API implementation: {italy_file}")
 
-    base = italy_raw.map(
+    base = raw_italy.map(
         lambda x: (
             (get_year(x), get_month(x)),
             (get_co2_intensity(x), get_c02_free(x), 1),
@@ -93,48 +93,45 @@ def query2_df(
     spark: SparkSession, italy_file: str, use_cache: bool = True, debug: bool = False
 ):
     if italy_file.endswith(".csv"):
-        df = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
+        raw_italy = spark.read.csv(italy_file, header=False, inferSchema=True).toDF(
             *COLUMN_NAMES_RAW
         )
     elif italy_file.endswith(".parquet"):
-        df = spark.read.parquet(italy_file)
+        raw_italy = spark.read.parquet(italy_file)
     elif italy_file.endswith(".avro"):
-        df = spark.read.format("avro").load(italy_file)
+        raw_italy = spark.read.format("avro").load(italy_file)
     else:
         raise Exception("Invalid file format for DF API implementation: {italy_file}")
 
     base = (
-        df.withColumn("Year", F.split(F.col("Datetime"), "-").getItem(0))
+        raw_italy.withColumn("Year", F.split(F.col("Datetime"), "-").getItem(0))
         .withColumn("Month", F.split(F.col("Datetime"), "-").getItem(1))
         .select(*COLUMN_NAMES_DF_2)
     )
+    print_debug(base, "base", debug)
 
-    all = base.groupBy("Year", "Month").agg(
-        F.avg("CO2_intensity_direct").alias(QUERY_2_COLUMNS[1]),
-        F.avg("Carbon_free_energy_percent").alias(QUERY_2_COLUMNS[2]),
+    all = (
+        base.groupBy("Year", "Month")
+        .agg(
+            F.avg("CO2_intensity_direct").alias(QUERY_2_COLUMNS[1]),
+            F.avg("Carbon_free_energy_percent").alias(QUERY_2_COLUMNS[2]),
+        )
+        .withColumn("date", F.concat(F.col("Year"), F.lit("_"), F.col("Month")))
+        .select(*QUERY_2_COLUMNS)
     )
-
-    all = all.withColumn(
-        "date", F.concat(F.col("Year"), F.lit("_"), F.col("Month"))
-    ).select(*QUERY_2_COLUMNS)
     if use_cache:
         all = all.cache()
+    print_debug(all, "all", debug)
 
     by_date = all.orderBy(F.col(QUERY_2_COLUMNS[0]).asc())
 
-    by_carbon_intensity = all.orderBy(F.col(QUERY_2_COLUMNS[1]).desc())
-    if use_cache:
-        by_carbon_intensity = by_carbon_intensity.cache()
-    by_carbon_intensity_top = by_carbon_intensity.limit(5)
-    by_carbon_intensity_bottom = by_carbon_intensity.orderBy(
-        F.col(QUERY_2_COLUMNS[1]).asc()
-    ).limit(5)
+    by_carbon_intensity_top = all.orderBy(F.col(QUERY_2_COLUMNS[1]).desc()).limit(5)
 
-    by_cfe = all.orderBy(F.col(QUERY_2_COLUMNS[2]).desc())
-    if use_cache:
-        by_cfe = by_cfe.cache()
-    by_cfe_top = by_cfe.limit(5)
-    by_cfe_bottom = by_cfe.orderBy(F.col(QUERY_2_COLUMNS[2]).asc()).limit(5)
+    by_carbon_intensity_bottom = all.orderBy(F.col(QUERY_2_COLUMNS[1]).asc()).limit(5)
+
+    by_cfe_top = all.orderBy(F.col(QUERY_2_COLUMNS[2]).desc()).limit(5)
+
+    by_cfe_bottom = all.orderBy(F.col(QUERY_2_COLUMNS[2]).asc()).limit(5)
 
     return (
         by_date,
