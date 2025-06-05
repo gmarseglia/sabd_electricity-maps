@@ -52,6 +52,8 @@ def query2_rdd(
 
     total_count = all.count()
 
+    by_date = all.sortBy(lambda x: x[0], ascending=True)
+
     by_carbon_intensity = all.sortBy(lambda x: x[1], ascending=False).zipWithIndex()
     if use_cache:
         by_carbon_intensity = by_carbon_intensity.cache()
@@ -79,7 +81,7 @@ def query2_rdd(
     )
 
     return (
-        all,
+        by_date,
         by_carbon_intensity_top,
         by_carbon_intensity_bottom,
         by_cfe_top,
@@ -118,6 +120,8 @@ def query2_df(
     if use_cache:
         all = all.cache()
 
+    by_date = all.orderBy(F.col(QUERY_2_COLUMNS[0]).asc())
+
     by_carbon_intensity = all.orderBy(F.col(QUERY_2_COLUMNS[1]).desc())
     if use_cache:
         by_carbon_intensity = by_carbon_intensity.cache()
@@ -133,7 +137,7 @@ def query2_df(
     by_cfe_bottom = by_cfe.orderBy(F.col(QUERY_2_COLUMNS[2]).asc()).limit(5)
 
     return (
-        all,
+        by_date,
         by_carbon_intensity_top,
         by_carbon_intensity_bottom,
         by_cfe_top,
@@ -168,20 +172,11 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
         """
     )
 
-    all = spark.sql(
+    by_date = spark.sql(
         """
         SELECT 
             *
         FROM base
-        """
-    )
-
-    by_carbon_intensity = spark.sql(
-        """
-        SELECT
-            *
-        FROM base
-        ORDER BY `carbon-intensity` DESC
         """
     )
 
@@ -202,15 +197,6 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
         FROM base
         ORDER BY `carbon-intensity` ASC
         LIMIT 5
-        """
-    )
-
-    by_cfe = spark.sql(
-        """
-        SELECT
-            *
-        FROM base
-        ORDER BY cfe DESC
         """
     )
 
@@ -235,7 +221,7 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     )
 
     return (
-        all,
+        by_date,
         by_carbon_intensity_top,
         by_carbon_intensity_bottom,
         by_cfe_top,
