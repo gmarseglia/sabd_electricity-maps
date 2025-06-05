@@ -40,25 +40,21 @@ def query2_rdd(
     )
     print_debug(base, "base", debug)
 
-    avg = (
+    all = (
         base.reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1], x[2] + y[2]))
         .map(lambda x: (x[0], (x[1][0] / x[1][2], x[1][1] / x[1][2])))
         .map(lambda x: (x[0][0] + "_" + x[0][1], x[1][0], x[1][1]))
     )
 
     if use_cache:
-        avg = avg.cache()
-    print_debug(avg, "avg", debug)
+        all = all.cache()
+    print_debug(all, "avg", debug)
 
-    total_count = avg.count()
+    total_count = all.count()
 
-    by_carbon_intensity = avg.sortBy(lambda x: x[1], ascending=False).zipWithIndex()
+    by_carbon_intensity = all.sortBy(lambda x: x[1], ascending=False).zipWithIndex()
     if use_cache:
         by_carbon_intensity = by_carbon_intensity.cache()
-
-    by_carbon_intensity_all = by_carbon_intensity.map(lambda x: x[0]).sortBy(
-        lambda x: x[0], ascending=True
-    )
 
     by_carbon_intensity_top = by_carbon_intensity.filter(lambda x: x[1] < 5).map(
         lambda x: x[0]
@@ -70,11 +66,9 @@ def query2_rdd(
         .sortBy(lambda x: x[1], ascending=True)
     )
 
-    by_cfe = avg.sortBy(lambda x: x[2], ascending=False).zipWithIndex()
+    by_cfe = all.sortBy(lambda x: x[2], ascending=False).zipWithIndex()
     if use_cache:
         by_cfe = by_cfe.cache()
-
-    by_cfe_all = by_cfe.map(lambda x: x[0]).sortBy(lambda x: x[0], ascending=True)
 
     by_cfe_top = by_cfe.filter(lambda x: x[1] < 5).map(lambda x: x[0])
 
@@ -85,10 +79,9 @@ def query2_rdd(
     )
 
     return (
-        by_carbon_intensity_all,
+        all,
         by_carbon_intensity_top,
         by_carbon_intensity_bottom,
-        by_cfe_all,
         by_cfe_top,
         by_cfe_bottom,
     )
@@ -108,44 +101,43 @@ def query2_df(
     else:
         raise Exception("Invalid file format for DF API implementation: {italy_file}")
 
-    df = (
+    base = (
         df.withColumn("Year", F.split(F.col("Datetime"), "-").getItem(0))
         .withColumn("Month", F.split(F.col("Datetime"), "-").getItem(1))
         .select(*COLUMN_NAMES_DF_2)
     )
 
-    df_avg = df.groupBy("Year", "Month").agg(
+    all = base.groupBy("Year", "Month").agg(
         F.avg("CO2_intensity_direct").alias(QUERY_2_COLUMNS[1]),
         F.avg("Carbon_free_energy_percent").alias(QUERY_2_COLUMNS[2]),
     )
 
-    df_avg = df_avg.withColumn(
+    all = all.withColumn(
         "date", F.concat(F.col("Year"), F.lit("_"), F.col("Month"))
     ).select(*QUERY_2_COLUMNS)
     if use_cache:
-        df_avg = df_avg.cache()
+        all = all.cache()
 
-    df_by_carbon_intensity = df_avg.orderBy(F.col(QUERY_2_COLUMNS[1]).desc())
+    by_carbon_intensity = all.orderBy(F.col(QUERY_2_COLUMNS[1]).desc())
     if use_cache:
-        df_by_carbon_intensity = df_by_carbon_intensity.cache()
-    df_by_carbon_intensity_top = df_by_carbon_intensity.limit(5)
-    df_by_carbon_intensity_bottom = df_by_carbon_intensity.orderBy(
+        by_carbon_intensity = by_carbon_intensity.cache()
+    by_carbon_intensity_top = by_carbon_intensity.limit(5)
+    by_carbon_intensity_bottom = by_carbon_intensity.orderBy(
         F.col(QUERY_2_COLUMNS[1]).asc()
     ).limit(5)
 
-    df_by_cfe = df_avg.orderBy(F.col(QUERY_2_COLUMNS[2]).desc())
+    by_cfe = all.orderBy(F.col(QUERY_2_COLUMNS[2]).desc())
     if use_cache:
-        df_by_cfe = df_by_cfe.cache()
-    df_by_cfe_top = df_by_cfe.limit(5)
-    df_by_cfe_bottom = df_by_cfe.orderBy(F.col(QUERY_2_COLUMNS[2]).asc()).limit(5)
+        by_cfe = by_cfe.cache()
+    by_cfe_top = by_cfe.limit(5)
+    by_cfe_bottom = by_cfe.orderBy(F.col(QUERY_2_COLUMNS[2]).asc()).limit(5)
 
     return (
-        df_by_carbon_intensity,
-        df_by_carbon_intensity_top,
-        df_by_carbon_intensity_bottom,
-        df_by_cfe,
-        df_by_cfe_top,
-        df_by_cfe_bottom,
+        all,
+        by_carbon_intensity_top,
+        by_carbon_intensity_bottom,
+        by_cfe_top,
+        by_cfe_bottom,
     )
 
 
@@ -176,10 +168,18 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
         """
     )
 
+    all = spark.sql(
+        """
+        SELECT 
+            *
+        FROM base
+        """
+    )
+
     by_carbon_intensity = spark.sql(
         """
         SELECT
-            date, `carbon-intensity`, cfe
+            *
         FROM base
         ORDER BY `carbon-intensity` DESC
         """
@@ -188,7 +188,7 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     by_carbon_intensity_top = spark.sql(
         """
         SELECT
-            date, `carbon-intensity`, cfe
+            *
         FROM base
         ORDER BY `carbon-intensity` DESC
         LIMIT 5
@@ -198,7 +198,7 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     by_carbon_intensity_bottom = spark.sql(
         """
         SELECT
-            date, `carbon-intensity`, cfe
+            *
         FROM base
         ORDER BY `carbon-intensity` ASC
         LIMIT 5
@@ -208,7 +208,7 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     by_cfe = spark.sql(
         """
         SELECT
-            date, `carbon-intensity`, cfe
+            *
         FROM base
         ORDER BY cfe DESC
         """
@@ -217,7 +217,7 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     by_cfe_top = spark.sql(
         """
         SELECT
-            date, `carbon-intensity`, cfe
+            *
         FROM base
         ORDER BY cfe DESC
         LIMIT 5
@@ -227,7 +227,7 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     by_cfe_bottom = spark.sql(
         """
         SELECT
-            date, `carbon-intensity`, cfe
+            *
         FROM base
         ORDER BY cfe ASC
         LIMIT 5
@@ -235,10 +235,9 @@ def query2_sql(spark: SparkSession, italy_file: str, debug: bool = False):
     )
 
     return (
-        by_carbon_intensity,
+        all,
         by_carbon_intensity_top,
         by_carbon_intensity_bottom,
-        by_cfe,
         by_cfe_top,
         by_cfe_bottom,
     )

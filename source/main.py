@@ -129,10 +129,9 @@ def q2():
 
     result2 = {}
     (
-        result2["by_carbon_intensity"],
+        result2["all"],
         result2["by_carbon_intensity_top"],
         result2["by_carbon_intensity_bottom"],
-        result2["by_cfe"],
         result2["by_cfe_top"],
         result2["by_cfe_bottom"],
     ) = query2(
@@ -197,7 +196,7 @@ def q2():
         if args.timed:
             t_q2["influx_start"] = time.perf_counter()
 
-        for row in result2["by_carbon_intensity"].collect():
+        for row in result2["all"].collect():
             point = (
                 Point("query_2")
                 .field(QUERY_2_COLUMNS[1], row[1])
