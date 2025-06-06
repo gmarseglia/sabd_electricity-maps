@@ -9,8 +9,7 @@ docker exec -t spark-client /opt/spark/bin/spark-submit \
     --master spark://spark-master:7077 \
     --deploy-mode client \
     --py-files source/source.zip \
-    source/main.py --mode composed --q1 --save-influx --timed --api sql --format parquet
-
+    source/main.py --mode composed --q1 --q2 --save-fs --save-influx --api rdd --format csv
 
 # Remove the source code
 (cd ${SOURCE_DIR} && rm -f source.zip)
