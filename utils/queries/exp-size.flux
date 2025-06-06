@@ -1,11 +1,13 @@
 import "array"
 
-groupCols = ["_measurement", "custom", "api"]
+groupCols = ["_measurement", "api", "custom"]
 keepCols = groupCols |> array.concat(v: ["mean", "stddev", "count"])
-sortGroupCols = ["_measurement"]
+sortGroupCols = ["_measurement", "api"]
 
 base = from(bucket: "mybucket")
   |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r.format == "csv" or r.api == "baseline")
+  |> filter(fn: (r) => r.cache == "True" or r.api == "sql" or r.api == "baseline")  
 
 meanData = base
   |> group(columns: groupCols)
@@ -13,7 +15,7 @@ meanData = base
 
 stdDevData = base
   |> group(columns: groupCols)
-  |> aggregateWindow(every: 1w, fn: stddev, createEmpty: false)
+  |> aggregateWindow(every: 1y, fn: stddev, createEmpty: false)
 
 meanAndStdDevData = join(
     tables: {t1: meanData, t2: stdDevData},
@@ -25,7 +27,7 @@ meanAndStdDevData = join(
 
 countData = base
   |> group(columns: groupCols)
-  |> aggregateWindow(every: 1w, fn: count, createEmpty: false)
+  |> aggregateWindow(every: 1y, fn: count, createEmpty: false)
   |> rename(columns: {_value: "count"})
   |> keep(columns: keepCols)
 

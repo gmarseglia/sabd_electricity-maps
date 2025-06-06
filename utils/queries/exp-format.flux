@@ -1,12 +1,14 @@
 import "array"
 
-groupCols = ["_measurement", "format"]
+groupCols = ["_measurement", "api", "format"]
 keepCols = groupCols |> array.concat(v: ["mean", "stddev", "count"])
-sortGroupCols = ["_measurement"]
+sortGroupCols = ["_measurement", "api"]
 
 base = from(bucket: "mybucket")
   |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-  |> filter(fn: (r) => r.api == "df" or r.api == "sql")
+  |> filter(fn: (r) => r.api == "df" or r.api == "sql")  
+  |> filter(fn: (r) => r.cache != "True")
+  |> filter(fn: (r) => r.custom == "country")  
 
 meanData = base
   |> group(columns: groupCols)
@@ -32,8 +34,8 @@ countData = base
 
 finalData = join(
     tables: {t1: meanAndStdDevData, t2: countData},
-    on: groupCols, // Specify the field to join on
-    method: "inner" // "inner" join is the default
+    on: groupCols,
+    method: "inner"
 )
   |> group(columns: sortGroupCols)
   |> sort(columns: ["mean"], desc: false) 

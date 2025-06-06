@@ -1,12 +1,14 @@
 import "array"
 
-groupCols = ["_measurement", "cache"]
+groupCols = ["_measurement", "api", "cache"]
 keepCols = groupCols |> array.concat(v: ["mean", "stddev", "count"])
-sortGroupCols = ["_measurement"]
+sortGroupCols = ["_measurement", "api"]
 
 base = from(bucket: "mybucket")
   |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
   |> filter(fn: (r) => r.api == "rdd" or r.api == "df")  
+  |> filter(fn: (r) => r.format == "csv")
+  |> filter(fn: (r) => r.custom == "region")  
 
 meanData = base
   |> group(columns: groupCols)
