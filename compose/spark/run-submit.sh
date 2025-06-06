@@ -9,7 +9,37 @@ docker exec -t spark-client /opt/spark/bin/spark-submit \
     --master spark://spark-master:7077 \
     --deploy-mode client \
     --py-files source/source.zip \
-    source/main.py --mode composed --q1 --q2 --save-fs --save-influx --api rdd --format csv
+    source/main.py --mode composed --collect --no-cache --format csv --q1 --api rdd
+
+docker exec -t spark-client /opt/spark/bin/spark-submit \
+    --master spark://spark-master:7077 \
+    --deploy-mode client \
+    --py-files source/source.zip \
+    source/main.py --mode composed --collect --no-cache --format csv --q1 --api df
+
+docker exec -t spark-client /opt/spark/bin/spark-submit \
+    --master spark://spark-master:7077 \
+    --deploy-mode client \
+    --py-files source/source.zip \
+    source/main.py --mode composed --collect --no-cache --format csv --q1 --api sql  
+
+docker exec -t spark-client /opt/spark/bin/spark-submit \
+    --master spark://spark-master:7077 \
+    --deploy-mode client \
+    --py-files source/source.zip \
+    source/main.py --mode composed --collect --no-cache --format csv --q2 --api rdd
+
+docker exec -t spark-client /opt/spark/bin/spark-submit \
+    --master spark://spark-master:7077 \
+    --deploy-mode client \
+    --py-files source/source.zip \
+    source/main.py --mode composed --collect --no-cache --format csv --q2 --api df
+
+docker exec -t spark-client /opt/spark/bin/spark-submit \
+    --master spark://spark-master:7077 \
+    --deploy-mode client \
+    --py-files source/source.zip \
+    source/main.py --mode composed --collect --no-cache --format csv --q2 --api sql
 
 # Remove the source code
 (cd ${SOURCE_DIR} && rm -f source.zip)

@@ -280,8 +280,15 @@ if __name__ == "__main__":
     """
     Spark setup
     """
+    app_name = "SABD-EM:"
+    if args.q1:
+        app_name += "Q1,"
+    if args.q2:
+        app_name += "Q2,"
+    app_name += f"{args.api}"
+    print(f"Running {app_name}")
     spark = (
-        SparkSession.builder.appName("SABD - Electricy Maps")
+        SparkSession.builder.appName(app_name)
         .config("spark.jars.packages", f"{JARS_PATH}spark-avro_2.12:3.5.5")
         .getOrCreate()
     )
