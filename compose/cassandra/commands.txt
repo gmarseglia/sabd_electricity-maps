@@ -1,7 +1,0 @@
-docker run -it --rm --name cassandra-client --network sabd-net cassandra bash
-cqlsh cassandra 9042
-
-CREATE KEYSPACE testks WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
-USE testks;
-CREATE TABLE tests ( id int PRIMARY KEY, value float );
-INSERT INTO tests (id, value) VALUES (1, 10);

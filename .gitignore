@@ -1,9 +1,7 @@
 dataset/
-results/
 .idea/*
 .requirements.txt
 source/__pycache__/
 source/source.zip
 .venv/
-compose/influxdb/backups/
 utils/*.txt

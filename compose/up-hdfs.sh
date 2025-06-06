@@ -8,6 +8,7 @@ docker build -f hdfs/Dockerfile -t gm/hadoop hdfs/
 
 # Start HDFS
 docker-compose -f hdfs/docker-compose.yml up -d
+
 # Format the namenode
 docker exec -t master hdfs namenode -format
 # Start DFS

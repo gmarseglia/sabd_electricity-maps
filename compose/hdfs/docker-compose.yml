@@ -1,7 +1,6 @@
 services:
     master:
         ports:
-            # - 54310:54310   # HDFS Remote DFS port
             - 9870:9870     # Web UI
         networks:
             - sabd-net
@@ -10,7 +9,6 @@ services:
         depends_on:
             - slave1
             - slave2
-            # - slave3
         tty: true
         stdin_open: true
         volumes:
@@ -35,16 +33,6 @@ services:
         image: gm/hadoop
         tty: true
         stdin_open: true
-
-    # slave3:
-    #     ports:
-    #         - 9862:9864
-    #     networks:
-    #         - sabd-net
-    #     container_name: slave3
-    #     image: gm/hadoop
-    #     tty: true
-    #     stdin_open: true
 
 networks:
     sabd-net:
