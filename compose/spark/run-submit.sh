@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Compress the source code
-SOURCE_DIR="/home/giuseppe/SABD/sabd_electricity-maps/source"
+source .env
+# SOURCE_DIR="/home/giuseppe/SABD/sabd_electricity-maps/source"
 (cd ${SOURCE_DIR} && rm -f source.zip && zip -r source.zip *)
 
 # Run the job
