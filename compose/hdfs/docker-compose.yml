@@ -1,42 +1,41 @@
 services:
     master:
-        ports:
-            - 9870:9870     # Web UI
-        networks:
-            - sabd-net
-        container_name: master
         image: gm/hadoop
+        container_name: master
         depends_on:
             - slave1
             - slave2
         tty: true
         stdin_open: true
         volumes:
-          - "${DATA_DIR}:/app/dataset"
+            - "${DATA_DIR}:/app/dataset"
+        ports:
+            - 9870:9870 # Web UI
+        networks:
+            - sabd-net
 
     slave1:
+        image: gm/hadoop
+        container_name: slave1
+        tty: true
+        stdin_open: true
         ports:
             - 9864:9864
         networks:
             - sabd-net
-        container_name: slave1
+
+    slave2:
         image: gm/hadoop
+        container_name: slave2
         tty: true
         stdin_open: true
-        
-    slave2:
         ports:
             - 9863:9864
         networks:
             - sabd-net
-        container_name: slave2
-        image: gm/hadoop
-        tty: true
-        stdin_open: true
 
 networks:
     sabd-net:
         name: sabd-net
         driver: bridge
         external: true
-        

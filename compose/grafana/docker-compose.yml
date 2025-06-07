@@ -2,12 +2,13 @@ services:
   grafana:
     image: bitnami/grafana
     container_name: grafana
+    volumes:
+      - data:/opt/bitnami/grafana
     ports:
       - "3000:3000"
     networks:
       - sabd-net
-    volumes:
-      - data:/opt/bitnami/grafana
+    
 
 networks:
   sabd-net:
